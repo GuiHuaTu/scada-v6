@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Rapid Software LLC. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using Scada.Comm.Devices;
 using Scada.Config;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
     /// Represents a device template.
     /// <para>Представляет шаблон устройства.</para>
     /// </summary>
-    public class DeviceTemplate : ConfigBase
+    public class DeviceTemplate : DeviceConfigBase
     {
         /// <summary>
         /// Gets the device template options.
@@ -149,6 +150,15 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
         public virtual CmdConfig CreateCmdConfig()
         {
             return new CmdConfig();
+        }
+
+
+        /// <summary>
+        /// Gets the short name of the device configuration file.
+        /// </summary>
+        public static string GetFileName(int deviceNum)
+        {
+            return GetFileName(DriverUtils.DriverCode, deviceNum);
         }
     }
 }

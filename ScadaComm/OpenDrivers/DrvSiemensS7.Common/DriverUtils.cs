@@ -14,7 +14,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7
         /// <summary>
         /// The driver code.
         /// </summary>
-        public const string DriverCode = "DrvSiemenss7";
+        public const string DriverCode = "DrvSiemensS7";
 
         /// <summary>
         /// Checks if the specified data type name matches the type.

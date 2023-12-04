@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Rapid Software LLC. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using S7.Net;
 using Scada.Config;
 using System.IO;
 using System.Xml;
@@ -17,8 +18,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
         /// Gets the connection options.
         /// </summary>
         public SiemensS7ConnectionOptions ConnectionOptions { get; private set; }
-        
-        
+
+
         /// <summary>
         /// Sets the default values.
         /// </summary>
@@ -49,7 +50,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
             XmlDeclaration xmlDecl = xmlDoc.CreateXmlDeclaration("1.0", "utf-8", null);
             xmlDoc.AppendChild(xmlDecl);
 
-            XmlElement rootElem = xmlDoc.CreateElement("OpcLineConfig");
+            XmlElement rootElem = xmlDoc.CreateElement("SiemensS7LineConfig");
             xmlDoc.AppendChild(rootElem);
 
             ConnectionOptions.SaveToXml(rootElem.AppendElem("ConnectionOptions"));

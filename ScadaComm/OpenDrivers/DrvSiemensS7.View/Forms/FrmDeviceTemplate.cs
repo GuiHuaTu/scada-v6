@@ -366,7 +366,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Forms
             ctrlCmd.Visible = true;
 
             ctrlCmd.TemplateOptions = template.Options;
-            ctrlCmd.Cmd = cmd;
+            ctrlCmd.Cmd = cmd; 
+
         }
 
         /// <summary>

@@ -12,6 +12,8 @@ using Scada.Lang;
 using System.Xml.Linq;
 using System.Text;
 using S7.Net.Types;
+using Scada.Comm.Drivers.DrvSiemensS7.Config;
+using Scada.Storages;
 
 namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
 {
@@ -34,7 +36,28 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
         /// The communication line log.
         /// </summary>
         protected ILog log;
+        private readonly IStorage storage;                    // the application storage
 
+        /// <summary>
+        /// Initializes a new instance of the class.
+        /// </summary> 
+        public SiemensS7Poll(SiemensS7ConnectionOptions options, ILog log, IStorage storage)
+        {
+
+            SiemensS7Session = null; 
+            this.storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            this.log = log ?? throw new ArgumentNullException(nameof(log));
+
+            CpuType = options.CpuType;
+            PlcIP = options.PlcIP;
+            PlcRack = options.PlcRack;
+            PlcSlot = options.PlcSlot;
+
+            Timeout = 0;
+            TransactionID = 0;
+            //ChooseRequestMethod();
+            ReadDoRequest = Read;
+        }
         /// <summary>
         /// Initializes a new instance of the class.
         /// </summary>
@@ -57,6 +80,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
         public void Connection()
         {
 
+            log.WriteLine($"开始连接S7:CpuType={CpuType},PlcIP={PlcIP},PlcRack={PlcRack},PlcSlot={PlcSlot}" );
             if (SiemensS7Session == null || !SiemensS7Session.IsConnected)
             {
                 SiemensS7Session = new Plc((CpuType)Enum.Parse(typeof(CpuType), CpuType), PlcIP, PlcRack, PlcSlot);
@@ -66,10 +90,12 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
 
             if (SiemensS7Session.IsConnected)
             {
+                log.WriteLine($"连接S7成功:CpuType={CpuType},PlcIP={PlcIP},PlcRack={PlcRack},PlcSlot={PlcSlot}" );
                 log.WriteLine(SiemensS7Phrases.OK);
             }
             else
             {
+                log.WriteLine($"连接S7失败:CpuType={CpuType},PlcIP={PlcIP},PlcRack={PlcRack},PlcSlot={PlcSlot}" );
                 log.WriteLine(SiemensS7Phrases.CommError);
             }
 
@@ -345,7 +371,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
             }
 
         }
-
+        //rapid scada  elemType  change to S7.net VarType
         public VarType GetByElemType(ElemType elemType)
         {
             switch (elemType)

@@ -143,6 +143,7 @@
             numCmdAddress.Name = "numCmdAddress";
             numCmdAddress.Size = new Size(211, 30);
             numCmdAddress.TabIndex = 1;
+            numCmdAddress.TextChanged += numCmdAddress_TextChanged;
             // 
             // lblCmdAddress
             // 

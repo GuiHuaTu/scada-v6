@@ -99,7 +99,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
         /// Shows the command configuration.
         /// </summary>
         private void ShowCmdConfig(CmdConfig cmd)
-        { 
+        {
             //ShowFuncCode(cmd);
             //ShowByteOrder(cmd);
 
@@ -142,7 +142,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
                 {
                     chkCmdMultiple.Checked = cmd.Multiple;
                     chkCmdMultiple.Enabled = true;
-                    numCmdAddress.Text = cmd.Address  ;
+                    numCmdAddress.Text = cmd.Address;
                     //lblCmdAddressHint.Text = string.Format(DriverPhrases.AddressHint, AddrNotation, AddrShift);
                     cbCmdElemType.SelectedIndex = (int)cmd.ElemType;
                     cbCmdElemType.Enabled = true;
@@ -244,6 +244,16 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
                 OnObjectChanged(TreeUpdateTypes.None);
             }
         }
+        private void numCmdAddress_TextChanged(object sender, EventArgs e)
+        {
+            // update command address
+            if (cmd != null)
+            {
+                cmd.Address = numCmdAddress.Text;
+                OnObjectChanged(TreeUpdateTypes.CurrentNode);
+            }
+
+        }
 
         private void numCmdNum_ValueChanged(object sender, EventArgs e)
         {
@@ -329,15 +339,6 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
             }
         }
 
-        private void numCmdAddress_ValueChanged(object sender, EventArgs e)
-        {
-            // update address
-            if (cmd != null)
-            {
-                cmd.Address = numCmdAddress.Text ;
-                OnObjectChanged(TreeUpdateTypes.CurrentNode);
-            }
-        }
 
         private void cbCmdElemType_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -380,5 +381,6 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
                 OnObjectChanged(TreeUpdateTypes.None);
             }
         }
+
     }
 }

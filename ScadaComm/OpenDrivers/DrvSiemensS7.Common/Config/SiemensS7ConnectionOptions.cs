@@ -18,6 +18,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
         /// </summary>
         public SiemensS7ConnectionOptions()
         {
+            CpuType = "";
             PlcIP = "";
             PlcRack = 0;
             PlcSlot = 0;
@@ -27,7 +28,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
         /// <summary>
         /// Gets or sets the server URL.
         /// </summary>
-        public string PlcIP { get; set; } 
+        public string CpuType { get; set; } 
+        public string PlcIP { get; set; }
         public short PlcRack { get; set; }
         public short PlcSlot { get; set; }
 
@@ -38,7 +40,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
         /// Loads the options from the XML node.
         /// </summary>
         public void LoadFromXml(XmlNode xmlNode)
-        { 
+        {
+            CpuType = xmlNode.GetChildAsString("CpuType");
             PlcIP = xmlNode.GetChildAsString("PlcIP");
             PlcRack = Convert.ToInt16(xmlNode.GetChildAsString("PlcRack"));
             PlcSlot = Convert.ToInt16(xmlNode.GetChildAsString("PlcSlot"));
@@ -54,6 +57,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
                 throw new  ArgumentNullException() ;
             }
 
+            xmlElem.AppendElem("CpuType", CpuType);
             xmlElem.AppendElem("PlcIP", PlcIP);
             xmlElem.AppendElem("PlcRack", PlcRack);
             xmlElem.AppendElem("PlcSlot", PlcSlot);

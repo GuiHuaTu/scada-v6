@@ -183,13 +183,15 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
             if (DataBlock == DataBlock.Input)
             {
                 xmlElem.SetAttribute("funcCode", CustomFuncCode);
+                xmlElem.SetAttribute("address", Address);
+                xmlElem.SetAttribute("elemType", ElemType.ToString().ToLowerInvariant());
             }
             else
             {
                 xmlElem.SetAttribute("multiple", Multiple);
                 xmlElem.SetAttribute("address", Address);
 
-                if (ElemTypeEnabled)
+                //if (ElemTypeEnabled)
                     xmlElem.SetAttribute("elemType", ElemType.ToString().ToLowerInvariant());
 
                 if (Multiple)

@@ -7,6 +7,7 @@ using Scada.Comm.Devices;
 using Scada.Comm.Drivers.DrvSiemensS7.Config;
 using Scada.Comm.Drivers.DrvSiemensS7.Protocol;
 using Scada.Comm.Lang;
+using Scada.Config;
 using Scada.Data.Const;
 using Scada.Data.Models;
 using Scada.Lang;
@@ -21,6 +22,18 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
     /// </summary>
     public class DevSiemensS7Logic : DeviceLogic
     {
+
+        /// <summary>
+        /// Contains data common to a communication line.
+        /// </summary>
+        private class SiemensS7LineData
+        {
+            public bool FatalError { get; set; } = false;
+            public SiemensS7Poll ClientHelper { get; set; }
+            public override string ToString() => CommPhrases.SharedObject;
+        }
+
+
         /// <summary>
         /// Represents a template dictionary.
         /// </summary>
@@ -34,12 +47,14 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             }
         }
 
+        private readonly DeviceTemplate config;             // the device configuration
+        private bool configError;                            // indicates that that device configuration is not loaded
+        private SiemensS7LineData lineData;                      // data common to the communication line
         protected string cpuType;     // the cpu type of the communication line
         protected string plcIP;     // the ip of the communication line
         protected short plcRack;     // the rack of the communication line
         protected short plcSlot;     // the slot of the communication line
-        protected DeviceModel deviceModel; // the device model
-        protected SiemensS7Poll siemensS7Poll;   // implements device polling
+        protected DeviceModel deviceModel; // the device model 
 
 
 
@@ -50,12 +65,20 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         public DevSiemensS7Logic(ICommContext commContext, ILineContext lineContext, DeviceConfig deviceConfig)
             : base(commContext, lineContext, deviceConfig)
         {
-            cpuType = Enum.GetName(typeof(VarType), CpuType.S71200);
-            lineContext.LineConfig.CustomOptions.TryGetValue("PlcIp",out plcIP);
-            plcRack = (short)lineContext.LineConfig.CustomOptions.GetValueAsInt("PlcRack" );
-            plcSlot = (short)lineContext.LineConfig.CustomOptions.GetValueAsInt("PlcSlot");
+
+            cpuType = LineContext.LineConfig.CustomOptions.GetValueAsString("CpuType", Enum.GetName(typeof(VarType), CpuType.S71200));
+
+            plcIP = LineContext.LineConfig.CustomOptions.GetValueAsString("PlcIP");
+            plcRack = (short)LineContext.LineConfig.CustomOptions.GetValueAsInt("PlcRack");
+            plcSlot = (short)LineContext.LineConfig.CustomOptions.GetValueAsInt("PlcSlot");
+
+
             deviceModel = null;
-            siemensS7Poll = null;
+            lineData = null;
+
+            Log.WriteLine($"S7连接配置:CpuType={cpuType},PlcIP={plcIP},PlcRack={plcRack},PlcSlot={plcSlot}");
+
+            ConnectionRequired = false;
         }
 
 
@@ -108,18 +131,19 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// Initializes an object for polling the device.
         /// 初始化用于轮询设备的对象。
         /// </summary>
-        private void InitSiemensS7Poll()
-        {
-            if (deviceModel != null)
-            {
-                // create polling object
-                siemensS7Poll = new SiemensS7Poll(cpuType, plcIP,plcRack,plcSlot)
-                {
-                    Timeout = PollingOptions.Timeout,
-                    Log = Log
-                };
-            }
-        }
+        //private void InitSiemensS7Poll()
+        //{
+        //    if (deviceModel != null)
+        //    {
+        //        Log.WriteLine($"S7连接配置:CpuType={cpuType},PlcIP={plcIP},PlcRack={plcRack},PlcSlot={plcSlot}" );
+        //        // create polling object
+        //        lineData.ClientHelper = new SiemensS7Poll(cpuType, plcIP,plcRack,plcSlot)
+        //        {
+        //            Timeout = PollingOptions.Timeout,
+        //            Log = Log
+        //        };
+        //    }
+        //}
 
         /// <summary>
         /// Sets the data of the element group tags.
@@ -157,6 +181,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         protected virtual TemplateDict GetTemplateDict()
         {
+            Log.WriteLine("--------- SiemenssS7 GetTemplateDict ");
+
             TemplateDict templateDict = LineContext.SharedData.ContainsKey(TemplateDictKey) ?
                 LineContext.SharedData[TemplateDictKey] as TemplateDict : null;
 
@@ -174,6 +200,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         protected virtual DeviceTemplate GetDeviceTemplate()
         {
+            Log.WriteLine("--------- SiemenssS7 GetDeviceTemplate ");
+
             DeviceTemplate deviceTemplate = null;
             string fileName = PollingOptions.CmdLine.Trim();
 
@@ -228,16 +256,126 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
 
         /// <summary>
+        /// Initializes data common to the communication line.
+        /// 初始化通信线路的公用数据。
+        /// </summary>
+        private void InitLineData()
+        {
+
+            if (LineContext.SharedData.TryGetValueOfType(nameof(SiemensS7LineData), out SiemensS7LineData data))
+            {
+                lineData = data;
+            }
+            else
+            {
+                SiemensS7LineConfig lineConfig = new SiemensS7LineConfig();
+                bool lineConfigError = false;
+                lineConfig.ConnectionOptions.CpuType = cpuType;
+                lineConfig.ConnectionOptions.PlcIP = plcIP;
+                lineConfig.ConnectionOptions.PlcRack= plcRack;
+                lineConfig.ConnectionOptions.PlcSlot= plcSlot;
+
+                Log.WriteLine($"S7连接配置:CpuType={cpuType},PlcIP={plcIP},PlcRack={plcRack},PlcSlot={plcSlot}");
+
+
+                Log.WriteLine($"S7连接配置:CpuType={lineConfig.ConnectionOptions.CpuType},PlcIP={lineConfig.ConnectionOptions.PlcIP},PlcRack={lineConfig.ConnectionOptions.PlcRack}" +
+                    $",PlcSlot={lineConfig.ConnectionOptions.PlcSlot}" );
+                lineData = new SiemensS7LineData()
+                {
+                    FatalError = lineConfigError,
+                    ClientHelper = new SiemensS7Poll(lineConfig.ConnectionOptions, Log, Storage)
+                    {
+                        Timeout = PollingOptions.Timeout,
+                        Log = Log
+                    }
+                };
+
+                LineContext.SharedData[nameof(SiemensS7LineData)] = lineData;
+            }
+        }
+
+        /// <summary>
         /// Performs actions when starting a communication line.
         /// 启动通信线路时执行操作。
         /// </summary>
         public override void OnCommLineStart()
         {
             cpuType = LineContext.LineConfig.CustomOptions.GetValueAsString("CpuType", Enum.GetName(typeof(VarType), CpuType.S71200));
-            
-            LineContext.LineConfig.CustomOptions.TryGetValue("PlcIp", out plcIP);
+
+            plcIP = LineContext.LineConfig.CustomOptions.GetValueAsString("PlcIP");
             plcRack = (short)LineContext.LineConfig.CustomOptions.GetValueAsInt("PlcRack");
             plcSlot = (short)LineContext.LineConfig.CustomOptions.GetValueAsInt("PlcSlot");
+
+            Log.WriteLine("--------- SiemenssS7 OnCommLineStart ");
+            InitLineData();
+
+         
+            InitDeviceTags();
+
+            #region Read点位数据
+            if (deviceModel == null)
+            {
+                Log.WriteLine(Locale.IsRussian ?
+                    "Невозможно опросить устройство, потому что модель устройства не определена" :
+                    "Unable to poll the device because device model is undefined");
+                SleepPollingDelay();
+                LastRequestOK = false;
+            }
+            else if (deviceModel.ElemGroups.Count > 0)
+            {
+                // request element groups
+                int elemGroupCnt = deviceModel.ElemGroups.Count;
+                int elemGroupIdx = 0;
+
+                while (elemGroupIdx < elemGroupCnt && LastRequestOK)
+                {
+                    ElemGroup elemGroup = deviceModel.ElemGroups[elemGroupIdx];
+                    LastRequestOK = false;
+                    int tryNum = 0;
+
+                    while (RequestNeeded(ref tryNum))
+                    {
+                        // perform request
+                        if (lineData.ClientHelper.ReadDoRequest(elemGroup))
+                        {
+                            LastRequestOK = true;
+
+                            SetTagData(elemGroup);
+                        }
+
+                        FinishRequest();
+                        tryNum++;
+                    }
+
+                    if (LastRequestOK)
+                    {
+                        // next element group
+                        elemGroupIdx++;
+                    }
+                    else if (tryNum > 0)
+                    {
+                        // set tag data as undefined for the current and the next element groups
+                        while (elemGroupIdx < elemGroupCnt)
+                        {
+                            elemGroup = deviceModel.ElemGroups[elemGroupIdx];
+                            DeviceData.Invalidate(elemGroup.StartTagIdx, elemGroup.Elems.Count);
+                            elemGroupIdx++;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Log.WriteLine(Locale.IsRussian ?
+                    "Отсутствуют элементы для запроса" :
+                    "No elements to request");
+                SleepPollingDelay();
+            }
+
+            #endregion
+
+             
+
         }
 
         /// <summary>
@@ -246,14 +384,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         public override void OnConnectionSet()
         {
-            //SiemensS7Session.Open();
-
-            InitSiemensS7Poll();
-
-
-            // update connection reference
-            if (siemensS7Poll != null)
-                siemensS7Poll.Connection();
+   
         }
 
         /// <summary>
@@ -262,7 +393,9 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         public override void OnCommLineTerminate()
         {
-            siemensS7Poll.Disconnect();
+            Log.WriteLine("--------- SiemenssS7 OnCommLineTerminate ");
+            lineData.ClientHelper.Disconnect();
+            FinishSession();
         }
 
         /// <summary>
@@ -271,6 +404,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         public override void InitDeviceTags()
         {
+
+            Log.WriteLine("--------- SiemenssS7 InitDeviceTags ");
             DeviceTemplate deviceTemplate = GetDeviceTemplate();
 
             if (deviceTemplate == null)
@@ -338,8 +473,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             }
 
             deviceModel.InitCmdMap();
-            CanSendCommands = deviceModel.Cmds.Count > 0;
-            InitSiemensS7Poll();
+            CanSendCommands = deviceModel.Cmds.Count > 0; 
         }
 
         /// <summary>
@@ -348,68 +482,30 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         public override void Session()
         {
-            base.Session();
+            Log.WriteLine("--------- SiemenssS7 Session ");
 
-            if (deviceModel == null)
+            if (lineData.FatalError || configError)
             {
-                Log.WriteLine(Locale.IsRussian ?
-                    "Невозможно опросить устройство, потому что модель устройства не определена" :
-                    "Unable to poll the device because device model is undefined");
-                SleepPollingDelay();
-                LastRequestOK = false;
+                DeviceStatus = DeviceStatus.Error;
             }
-            else if (deviceModel.ElemGroups.Count > 0)
+            else if (lineData.ClientHelper.SiemensS7Session == null)
             {
-                // request element groups
-                int elemGroupCnt = deviceModel.ElemGroups.Count;
-                int elemGroupIdx = 0;
+                lineData.ClientHelper.Connection();
 
-                while (elemGroupIdx < elemGroupCnt && LastRequestOK)
+                if (!lineData.ClientHelper.SiemensS7Session.IsConnected)
                 {
-                    ElemGroup elemGroup = deviceModel.ElemGroups[elemGroupIdx];
-                    LastRequestOK = false;
-                    int tryNum = 0;
-
-                    while (RequestNeeded(ref tryNum))
-                    {
-                        // perform request
-                        if (siemensS7Poll.ReadDoRequest(elemGroup))
-                        {
-                            LastRequestOK = true;
-
-                            SetTagData(elemGroup);
-                        }
-
-                        FinishRequest();
-                        tryNum++;
-                    }
-
-                    if (LastRequestOK)
-                    {
-                        // next element group
-                        elemGroupIdx++;
-                    }
-                    else if (tryNum > 0)
-                    {
-                        // set tag data as undefined for the current and the next element groups
-                        while (elemGroupIdx < elemGroupCnt)
-                        {
-                            elemGroup = deviceModel.ElemGroups[elemGroupIdx];
-                            DeviceData.Invalidate(elemGroup.StartTagIdx, elemGroup.Elems.Count);
-                            elemGroupIdx++;
-                        }
-                    }
+                    DeviceStatus = DeviceStatus.Error;
+                    DeviceData.Invalidate();
                 }
             }
-            else
+            else if (!lineData.ClientHelper.SiemensS7Session.IsConnected)
             {
-                Log.WriteLine(Locale.IsRussian ?
-                    "Отсутствуют элементы для запроса" :
-                    "No elements to request");
-                SleepPollingDelay();
+                DeviceStatus = DeviceStatus.Error;
+                DeviceData.Invalidate();
             }
 
-            FinishSession();
+            SleepPollingDelay();
+
         }
 
         /// <summary>
@@ -418,6 +514,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         public override void SendCommand(TeleCommand cmd)
         {
+            Log.WriteLine("--------- SiemenssS7 SendCommand ");
             base.SendCommand(cmd);
 
             if ((deviceModel.GetCmd(cmd.CmdCode) ?? deviceModel.GetCmd(cmd.CmdNum)) is SiemensS7Cmd siemensS7Cmd)
@@ -444,7 +541,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
                 while (RequestNeeded(ref tryNum))
                 {
-                    if (siemensS7Poll.SetValue(siemensS7Cmd,cmd.GetCmdDataString()))
+                    if (lineData.ClientHelper.SetValue(siemensS7Cmd,cmd.GetCmdDataString()))
                         LastRequestOK = true;
 
                     FinishRequest();
