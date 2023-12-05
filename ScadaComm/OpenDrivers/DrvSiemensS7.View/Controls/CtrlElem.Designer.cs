@@ -114,6 +114,7 @@
             rb_DateTimeLong.TabStop = true;
             rb_DateTimeLong.Text = "DateTimeLong";
             rb_DateTimeLong.UseVisualStyleBackColor = true;
+            rb_DateTimeLong.CheckedChanged += rbType_CheckedChanged;
             // 
             // rb_DateTime
             // 
@@ -126,6 +127,7 @@
             rb_DateTime.TabStop = true;
             rb_DateTime.Text = "DateTime";
             rb_DateTime.UseVisualStyleBackColor = true;
+            rb_DateTime.CheckedChanged += rbType_CheckedChanged;
             // 
             // rb_Counter
             // 
@@ -138,6 +140,7 @@
             rb_Counter.TabStop = true;
             rb_Counter.Text = "Counter";
             rb_Counter.UseVisualStyleBackColor = true;
+            rb_Counter.CheckedChanged += rbType_CheckedChanged;
             // 
             // rb_S5Time
             // 
@@ -150,6 +153,7 @@
             rb_S5Time.TabStop = true;
             rb_S5Time.Text = "S5Time";
             rb_S5Time.UseVisualStyleBackColor = true;
+            rb_S5Time.CheckedChanged += rbType_CheckedChanged;
             // 
             // rb_S7WString
             // 
@@ -162,6 +166,7 @@
             rb_S7WString.TabStop = true;
             rb_S7WString.Text = "S7WString";
             rb_S7WString.UseVisualStyleBackColor = true;
+            rb_S7WString.CheckedChanged += rbType_CheckedChanged;
             // 
             // rb_S7String
             // 
@@ -174,6 +179,7 @@
             rb_S7String.TabStop = true;
             rb_S7String.Text = "S7String";
             rb_S7String.UseVisualStyleBackColor = true;
+            rb_S7String.CheckedChanged += rbType_CheckedChanged;
             // 
             // rb_String
             // 
@@ -186,6 +192,7 @@
             rb_String.TabStop = true;
             rb_String.Text = "string";
             rb_String.UseVisualStyleBackColor = true;
+            rb_String.CheckedChanged += rbType_CheckedChanged;
             // 
             // rbByte
             // 
@@ -198,6 +205,7 @@
             rbByte.TabStop = true;
             rbByte.Text = "byte (1 byte)";
             rbByte.UseVisualStyleBackColor = true;
+            rbByte.CheckedChanged += rbType_CheckedChanged;
             // 
             // chkElemReadOnly
             // 

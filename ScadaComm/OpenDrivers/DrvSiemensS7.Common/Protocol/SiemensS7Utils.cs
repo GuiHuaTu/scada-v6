@@ -114,17 +114,19 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
             switch (dataBlock)
             {
                 case DataBlock.Input:
-                    return "Process Inputs";
+                    return "Inputs";
                 case DataBlock.Output:
-                    return "Process Outputs";
+                    return "Outputs";
                 case DataBlock.Memory:
                     return "Merkers";
                 case DataBlock.DataBlock:
-                    return "DB";
+                    return "DataBlock";
                 case DataBlock.Counter:
                     return "Counters";
-                default: // DataBlock.S7AreaTM
+                case DataBlock.Timer:
                     return "Timers";
+                default: 
+                    return "";
             }
         }
 

@@ -182,19 +182,39 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
 
             if (elemGroup.Elems.Count > 0)
             {
-                try
+                int okCount = 0;
+                log.WriteLine($"------------------------------------------------------------------------------------------");
+                log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:Start");
+                log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:ElemGroup.Elems.Count={elemGroup.Elems.Count}");
+                for (int i = 0; i < elemGroup.Elems.Count; i++)
                 {
-                    for (int i = 0; i < elemGroup.Elems.Count; i++)
+                    try
                     {
-                        object val = ReadValue(elemGroup.Elems[i]);
+                        log.WriteLine("");
+                        string val = ReadValue(elemGroup.Elems[i]).ToString();
+
+                        log.WriteLine($"--------- SiemenssS7 ReadValue:ElemName={elemGroup.Elems[i].Name} Address={elemGroup.Elems[i].Address}" +
+                            $" ElemType={elemGroup.Elems[i].ElemType} ReadValue={val}");
+
+                        log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:ElemGroup.ElemData.Count={elemGroup.ElemData.Count}");
+                        
                         elemGroup.ElemData[i] = val;
+
+                        okCount = okCount + 1;
                     }
-                    log.WriteLine(SiemensS7Phrases.OK);
+                    catch (Exception ex)
+                    {
+                        log.WriteLine("Error: " + ex.Message);
+                    }
+                }
+
+                if(okCount == elemGroup.Elems.Count)//采集全部成功
+                {
+                    log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:OK");
                     return true;
                 }
-                catch (Exception ex)
-                {
-                    log.WriteLine("Error: " + ex.Message);
+                else{
+                    log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:Err");
                     return false;
                 }
             }
@@ -212,7 +232,9 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
             if (SiemensS7Session != null && SiemensS7Session.IsConnected)
             {
                 var plcData = new PLCAddress(elem.Address);
-                VarType useType = GetByElemType(elem.ElemType);
+                VarType useType = GetS7VarTypeByElemType(elem.ElemType);
+
+                log.WriteLine($"--------- SiemenssS7 ReadValue:ElemName={elem.Name} Address={elem.Address} ElemType={elem.ElemType} VarType={useType}");
                 switch (useType)
                 {
                     case VarType.Bit:
@@ -263,7 +285,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                         return SiemensS7Session.Read(plcData.DataType, plcData.DbNumber, plcData.StartByte, VarType.DateTimeLong, 1);
                         break;
                     default:
-                        throw new Exception("无输入");
+                        throw new Exception("读取数据类型不存在");
                         break;
                 }
                 return null;
@@ -276,14 +298,14 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
         }
 
 
-        public bool SetValue(SiemensS7Cmd siemensS7Cmd, string value)
+        public bool SetValue(SiemensS7Cmd siemensS7Cmd, object value)
         {
             try
             {
                 if (SiemensS7Session != null && SiemensS7Session.IsConnected)
                 {
                     var plcData = new PLCAddress(siemensS7Cmd.Address);
-                    VarType useType = GetByElemType(siemensS7Cmd.ElemType);
+                    VarType useType = GetS7VarTypeByElemType(siemensS7Cmd.ElemType);
 
                     switch (useType)
                     {
@@ -372,7 +394,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
 
         }
         //rapid scada  elemType  change to S7.net VarType
-        public VarType GetByElemType(ElemType elemType)
+        public VarType GetS7VarTypeByElemType(ElemType elemType)
         {
             switch (elemType)
             {
@@ -421,7 +443,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                     return VarType.DateTimeLong;
                     break;
                 default:
-                    throw new Exception("无输入");
+                    throw new Exception("数据类型不存在");
                     break;
 
             }

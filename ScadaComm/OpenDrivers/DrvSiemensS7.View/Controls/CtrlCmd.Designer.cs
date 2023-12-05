@@ -77,6 +77,7 @@
             gbCmd.TabIndex = 0;
             gbCmd.TabStop = false;
             gbCmd.Text = "Command Parameters";
+            gbCmd.Enter += gbCmd_Enter;
             // 
             // pnlCmdElem
             // 
@@ -118,7 +119,6 @@
             // 
             cbCmdElemType.DropDownStyle = ComboBoxStyle.DropDownList;
             cbCmdElemType.FormattingEnabled = true;
-            cbCmdElemType.Items.AddRange(new object[] { "bool (1 bit)", "byte (1 byte)", "double (8 bytes)", "float (4 bytes)", "int (4 bytes)", "long (8 bytes)", "S7String", "S7WString", "short (2 bytes)", "string", "uint (4 bytes)", "ulong (8 bytes)", "Undefined", "ushort (2 bytes)" });
             cbCmdElemType.Location = new Point(9, 106);
             cbCmdElemType.Margin = new Padding(5);
             cbCmdElemType.Name = "cbCmdElemType";

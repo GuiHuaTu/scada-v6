@@ -25,6 +25,12 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
             InitializeComponent();
             cmd = null;
             TemplateOptions = null;
+
+            string[] elemTypeArr = Enum.GetNames(typeof(ElemType));
+            foreach (var item in elemTypeArr)
+            {
+                cbCmdElemType.Items.Add(item);
+            }
         }
 
 
@@ -127,9 +133,13 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
                 numCmdNum.SetValue(cmd.CmdNum);
                 cbCmdDataBlock.SelectedIndex = cmd.DataBlock switch
                 {
-                    DataBlock.Input => 0,
+                    DataBlock.Input  => 0 ,
                     DataBlock.Output => 1,
-                    _ => 2
+                    DataBlock.Memory => 2,
+                    DataBlock.DataBlock => 3,
+                    DataBlock.Timer => 4,
+                    DataBlock.Counter => 5,
+                    _ => 0
                 };
 
                 //if (cmd.DataBlock == DataBlock.Custom)
@@ -229,9 +239,9 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
                 cmd.Name = txtCmdName.Text;
                 OnObjectChanged(TreeUpdateTypes.CurrentNode);
 
-                if (updateCmdCode)
+                //if (updateCmdCode)
                     txtCmdCode.Text = txtCmdName.Text;
-            }
+            } 
         }
 
         private void txtCmdCode_TextChanged(object sender, EventArgs e)
@@ -274,8 +284,13 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
                 {
                     0 => DataBlock.Input,
                     1 => DataBlock.Output,
+                    2 => DataBlock.Memory,
+                    3 => DataBlock.DataBlock,
+                    4 => DataBlock.Timer,
+                    5 => DataBlock.Counter,
                     _ => DataBlock.DataBlock
                 };
+
 
                 //ShowFuncCode(cmd);
                 //ShowByteOrder(cmd);
@@ -347,18 +362,21 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
             {
                 ElemType newElemType = (ElemType)cbCmdElemType.SelectedIndex;
 
-                if (cmd.DataBlock == DataBlock.Input && newElemType == ElemType.Bool)
-                {
-                    // cancel the Bool type selection
-                    cbCmdElemType.SelectedIndexChanged -= cbCmdElemType_SelectedIndexChanged;
-                    cbCmdElemType.SelectedIndex = (int)cmd.ElemType;
-                    cbCmdElemType.SelectedIndexChanged += cbCmdElemType_SelectedIndexChanged;
-                }
-                else
-                {
-                    cmd.ElemType = newElemType;
-                    OnObjectChanged(TreeUpdateTypes.CurrentNode);
-                }
+                cmd.ElemType = newElemType;
+                OnObjectChanged(TreeUpdateTypes.CurrentNode);
+
+                //if (cmd.DataBlock == DataBlock.Input && newElemType == ElemType.Bool)
+                //{
+                //    // cancel the Bool type selection
+                //    cbCmdElemType.SelectedIndexChanged -= cbCmdElemType_SelectedIndexChanged;
+                //    cbCmdElemType.SelectedIndex = (int)cmd.ElemType;
+                //    cbCmdElemType.SelectedIndexChanged += cbCmdElemType_SelectedIndexChanged;
+                //}
+                //else
+                //{
+                //    cmd.ElemType = newElemType;
+                //    OnObjectChanged(TreeUpdateTypes.CurrentNode);
+                //}
             }
         }
 
@@ -382,5 +400,9 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
             }
         }
 
+        private void gbCmd_Enter(object sender, EventArgs e)
+        {
+
+        }
     }
 }

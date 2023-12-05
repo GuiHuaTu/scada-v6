@@ -121,7 +121,18 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
             {
                 chkGrActive.Checked = elemGroup.Active;
                 txtGrName.Text = elemGroup.Name;
-                cbGrDataBlock.SelectedIndex = (int)elemGroup.DataBlock;
+
+                cbGrDataBlock.SelectedIndex = elemGroup.DataBlock switch
+                {
+                    DataBlock.Input => 0,
+                    DataBlock.Output => 1,
+                    DataBlock.Memory => 2,
+                    DataBlock.DataBlock => 3,
+                    DataBlock.Timer => 4,
+                    DataBlock.Counter => 5,
+                    _ => 0
+                };
+
                 //numGrAddress.SetValue(elemGroup.Address + AddrShift);
                 //lblGrAddressHint.Text = string.Format(DriverPhrases.AddressHint, AddrNotation, AddrShift);
                 numGrElemCnt.Maximum = elemGroup.MaxElemCnt;
@@ -194,8 +205,19 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
         {
             // update group data block
             if (elemGroup != null)
-            {
-                DataBlock dataBlock = (DataBlock)cbGrDataBlock.SelectedIndex;
+            { 
+                DataBlock dataBlock = cbGrDataBlock.SelectedIndex switch
+                {
+                    0 => DataBlock.Input,
+                    1 => DataBlock.Output,
+                    2 => DataBlock.Memory,
+                    3 => DataBlock.DataBlock,
+                    4 => DataBlock.Timer,
+                    5 => DataBlock.Counter,
+                    _ => DataBlock.DataBlock
+                };
+
+
                 int maxElemCnt = elemGroup.GetMaxElemCnt(dataBlock);
 
                 bool cancel = elemGroup.Elems.Count > maxElemCnt &&
@@ -207,8 +229,18 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.View.Controls
                 if (cancel)
                 {
                     // revert selected item
-                    cbGrDataBlock.SelectedIndexChanged -= cbGrDataBlock_SelectedIndexChanged;
-                    cbGrDataBlock.SelectedIndex = (int)elemGroup.DataBlock;
+                    cbGrDataBlock.SelectedIndexChanged -= cbGrDataBlock_SelectedIndexChanged; 
+
+                    cbGrDataBlock.SelectedIndex = elemGroup.DataBlock switch
+                    {
+                        DataBlock.Input => 0,
+                        DataBlock.Output => 1,
+                        DataBlock.Memory => 2,
+                        DataBlock.DataBlock => 3,
+                        DataBlock.Timer => 4,
+                        DataBlock.Counter => 5,
+                        _ => 0
+                    };
                     cbGrDataBlock.SelectedIndexChanged += cbGrDataBlock_SelectedIndexChanged;
                 }
                 else

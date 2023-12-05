@@ -13,6 +13,7 @@ using Scada.Data.Models;
 using Scada.Lang;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 {
@@ -92,16 +93,13 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// Creates a new SiemensS7 command based on the element configuration.
         /// 基于元素配置创建一个新的SiemensS7命令。
         /// </summary>
-        private SiemensS7Cmd CreateSiemensS7Cmd(DeviceTemplateOptions options, 
-            ElemGroupConfig elemGroupConfig, ElemConfig elemConfig )
+        private SiemensS7Cmd CreateSiemensS7Cmd(ElemGroupConfig elemGroupConfig, ElemConfig elemConfig )
         {
             SiemensS7Cmd siemensS7Cmd = deviceModel.CreateSiemensS7Cmd(elemGroupConfig.DataBlock, elemConfig.Quantity > 1);
             siemensS7Cmd.Name = elemConfig.Name;
             siemensS7Cmd.Address = elemConfig.Address;
             siemensS7Cmd.ElemType = elemConfig.ElemType;
             siemensS7Cmd.ElemCnt = 1;
-            siemensS7Cmd.ByteOrder = SiemensS7Utils.ParseByteOrder(elemConfig.ByteOrder) ??
-                options.GetDefaultByteOrder(SiemensS7Utils.GetDataLength(elemConfig.ElemType));
             siemensS7Cmd.CmdNum = 0;
             siemensS7Cmd.CmdCode = elemConfig.TagCode;
              
@@ -112,15 +110,13 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// Creates a new SiemensS7 command based on the command configuration.
         /// 基于命令配置创建新的SiemensS7命令
         /// </summary>
-        private SiemensS7Cmd CreateSiemensS7Cmd(DeviceTemplateOptions options, CmdConfig cmdConfig)
+        private SiemensS7Cmd CreateSiemensS7Cmd( CmdConfig cmdConfig)
         {
             SiemensS7Cmd siemensS7Cmd = deviceModel.CreateSiemensS7Cmd(cmdConfig.DataBlock, cmdConfig.Multiple);
             siemensS7Cmd.Name = cmdConfig.Name;
             siemensS7Cmd.Address = cmdConfig.Address;
             siemensS7Cmd.ElemType = cmdConfig.ElemType;
             siemensS7Cmd.ElemCnt = cmdConfig.ElemCnt;
-            siemensS7Cmd.ByteOrder = SiemensS7Utils.ParseByteOrder(cmdConfig.ByteOrder) ??
-                options.GetDefaultByteOrder(SiemensS7Utils.GetDataLength(cmdConfig.ElemType) * cmdConfig.ElemCnt);
             siemensS7Cmd.CmdNum = cmdConfig.CmdNum;
             siemensS7Cmd.CmdCode = cmdConfig.CmdCode;
              
@@ -131,33 +127,75 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// Initializes an object for polling the device.
         /// 初始化用于轮询设备的对象。
         /// </summary>
-        //private void InitSiemensS7Poll()
-        //{
-        //    if (deviceModel != null)
-        //    {
-        //        Log.WriteLine($"S7连接配置:CpuType={cpuType},PlcIP={plcIP},PlcRack={plcRack},PlcSlot={plcSlot}" );
-        //        // create polling object
-        //        lineData.ClientHelper = new SiemensS7Poll(cpuType, plcIP,plcRack,plcSlot)
-        //        {
-        //            Timeout = PollingOptions.Timeout,
-        //            Log = Log
-        //        };
-        //    }
-        //}
+        private void InitSiemensS7Poll()
+        {
+            if (lineData.FatalError || configError)
+            {
+                DeviceStatus = DeviceStatus.Error;
+            }
+            else if (lineData.ClientHelper.SiemensS7Session == null)
+            {
+                Log.WriteLine($"--------- SiemenssS7 Session Connection");
+                lineData.ClientHelper.Connection();
+
+                if (!lineData.ClientHelper.SiemensS7Session.IsConnected)
+                {
+                    DeviceStatus = DeviceStatus.Error;
+                    DeviceData.Invalidate();
+                }
+                Log.WriteLine($"--------- SiemenssS7 Session Connection Successful");
+
+            }
+            else if (!lineData.ClientHelper.SiemensS7Session.IsConnected)
+            {
+                Log.WriteLine($"--------- SiemenssS7 Session Connection Fail");
+                DeviceStatus = DeviceStatus.Error;
+                DeviceData.Invalidate();
+            }
+
+        }
 
         /// <summary>
         /// Sets the data of the element group tags.
         /// </summary>
         private void SetTagData(ElemGroup elemGroup)
         {
+             Log.WriteLine($"--------- SiemenssS7 SetTagData ");
             int tagStatus = LastRequestOK ? CnlStatusID.Defined : CnlStatusID.Undefined;
-            for (int elemIdx = 0, tagIdx = elemGroup.StartTagIdx + elemIdx, cnt = elemGroup.Elems.Count; 
-                elemIdx < cnt; elemIdx++, tagIdx++)
+
+             Log.WriteLine($"--------- SiemenssS7 SetTagData Status={tagStatus}"); 
+
+            //for (int elemIdx = 0, tagIdx = elemGroup.StartTagIdx + elemIdx, cnt = elemGroup.Elems.Count; 
+            //    elemIdx < cnt; elemIdx++, tagIdx++)
+            //{
+            //    Log.WriteLine($"--------- {elemGroup.Elems[elemIdx].DeviceTag.Index}-{elemGroup.Elems[elemIdx].DeviceTag.Code} :   {elemGroup.ElemData[elemIdx]}");
+            //    DeviceData.Set(elemGroup.Elems[elemIdx].DeviceTag, elemGroup.ElemData[elemIdx], tagStatus);
+            //}
+            for (int i=0;i< elemGroup.Elems.Count;i++)
             {
-                DeviceData.Set(elemGroup.Elems[elemIdx].DeviceTag, elemGroup.ElemData[elemIdx], tagStatus);
+                DeviceTag deviceTag = elemGroup.Elems[i].DeviceTag;
+                object val = elemGroup.ElemData[i];
+                Log.WriteLine($"--------- SiemenssS7 SetTagData deviceTag.Name={deviceTag.Name}  deviceTag.Val={val}");
+
+                SetTagData(deviceTag, val, tagStatus);
             }
         }
-
+        /// <summary>
+        /// Sets value, status and format of the specified tag.
+        /// </summary>
+        private void SetTagData(DeviceTag deviceTag, object val, int stat)
+        {
+            try
+            { 
+                DeviceData.Set(deviceTag, val, stat);
+            }
+            catch (Exception ex)
+            {
+                Log.WriteInfo(ex.BuildErrorMessage(Locale.IsRussian ?
+                    "Ошибка при установке данных тега" :
+                    "Error setting tag data"));
+            }
+        }
 
 
         /// <summary>
@@ -181,7 +219,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         protected virtual TemplateDict GetTemplateDict()
         {
-            Log.WriteLine("--------- SiemenssS7 GetTemplateDict ");
+            Log.WriteLine($"--------- SiemenssS7 GetTemplateDict ");
 
             TemplateDict templateDict = LineContext.SharedData.ContainsKey(TemplateDictKey) ?
                 LineContext.SharedData[TemplateDictKey] as TemplateDict : null;
@@ -200,10 +238,10 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         protected virtual DeviceTemplate GetDeviceTemplate()
         {
-            Log.WriteLine("--------- SiemenssS7 GetDeviceTemplate ");
 
             DeviceTemplate deviceTemplate = null;
             string fileName = PollingOptions.CmdLine.Trim();
+            Log.WriteLine($"--------- SiemenssS7 GetDeviceTemplate :fileName="+ fileName);
 
             if (string.IsNullOrEmpty(fileName))
             {
@@ -273,10 +311,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                 lineConfig.ConnectionOptions.CpuType = cpuType;
                 lineConfig.ConnectionOptions.PlcIP = plcIP;
                 lineConfig.ConnectionOptions.PlcRack= plcRack;
-                lineConfig.ConnectionOptions.PlcSlot= plcSlot;
-
-                Log.WriteLine($"S7连接配置:CpuType={cpuType},PlcIP={plcIP},PlcRack={plcRack},PlcSlot={plcSlot}");
-
+                lineConfig.ConnectionOptions.PlcSlot= plcSlot; 
 
                 Log.WriteLine($"S7连接配置:CpuType={lineConfig.ConnectionOptions.CpuType},PlcIP={lineConfig.ConnectionOptions.PlcIP},PlcRack={lineConfig.ConnectionOptions.PlcRack}" +
                     $",PlcSlot={lineConfig.ConnectionOptions.PlcSlot}" );
@@ -294,6 +329,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             }
         }
 
+
         /// <summary>
         /// Performs actions when starting a communication line.
         /// 启动通信线路时执行操作。
@@ -306,75 +342,13 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             plcRack = (short)LineContext.LineConfig.CustomOptions.GetValueAsInt("PlcRack");
             plcSlot = (short)LineContext.LineConfig.CustomOptions.GetValueAsInt("PlcSlot");
 
-            Log.WriteLine("--------- SiemenssS7 OnCommLineStart ");
+            Log.WriteLine($"--------- SiemenssS7 OnCommLineStart ");
+
             InitLineData();
 
          
             InitDeviceTags();
 
-            #region Read点位数据
-            if (deviceModel == null)
-            {
-                Log.WriteLine(Locale.IsRussian ?
-                    "Невозможно опросить устройство, потому что модель устройства не определена" :
-                    "Unable to poll the device because device model is undefined");
-                SleepPollingDelay();
-                LastRequestOK = false;
-            }
-            else if (deviceModel.ElemGroups.Count > 0)
-            {
-                // request element groups
-                int elemGroupCnt = deviceModel.ElemGroups.Count;
-                int elemGroupIdx = 0;
-
-                while (elemGroupIdx < elemGroupCnt && LastRequestOK)
-                {
-                    ElemGroup elemGroup = deviceModel.ElemGroups[elemGroupIdx];
-                    LastRequestOK = false;
-                    int tryNum = 0;
-
-                    while (RequestNeeded(ref tryNum))
-                    {
-                        // perform request
-                        if (lineData.ClientHelper.ReadDoRequest(elemGroup))
-                        {
-                            LastRequestOK = true;
-
-                            SetTagData(elemGroup);
-                        }
-
-                        FinishRequest();
-                        tryNum++;
-                    }
-
-                    if (LastRequestOK)
-                    {
-                        // next element group
-                        elemGroupIdx++;
-                    }
-                    else if (tryNum > 0)
-                    {
-                        // set tag data as undefined for the current and the next element groups
-                        while (elemGroupIdx < elemGroupCnt)
-                        {
-                            elemGroup = deviceModel.ElemGroups[elemGroupIdx];
-                            DeviceData.Invalidate(elemGroup.StartTagIdx, elemGroup.Elems.Count);
-                            elemGroupIdx++;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                Log.WriteLine(Locale.IsRussian ?
-                    "Отсутствуют элементы для запроса" :
-                    "No elements to request");
-                SleepPollingDelay();
-            }
-
-            #endregion
-
-             
 
         }
 
@@ -393,7 +367,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         public override void OnCommLineTerminate()
         {
-            Log.WriteLine("--------- SiemenssS7 OnCommLineTerminate ");
+            Log.WriteLine($"--------- SiemenssS7 OnCommLineTerminate ");
             lineData.ClientHelper.Disconnect();
             FinishSession();
         }
@@ -405,7 +379,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         public override void InitDeviceTags()
         {
 
-            Log.WriteLine("--------- SiemenssS7 InitDeviceTags ");
+            Log.WriteLine($"--------- SiemenssS7 InitDeviceTags ");
             DeviceTemplate deviceTemplate = GetDeviceTemplate();
 
             if (deviceTemplate == null)
@@ -434,6 +408,19 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
                 foreach (ElemConfig elemConfig in elemGroupConfig.Elems)
                 {
+
+                    // add device tag
+                    tagGroup.AddTag(elemConfig.TagCode, elemConfig.Name).SetFormat(GetTagFormat(elemConfig));
+                    //elemAddrOffset += elemConfig.Quantity;
+
+                    DeviceTag deviceTag = tagGroup.AddTag(elemConfig.TagCode, elemConfig.Name);
+
+                    if (elemConfig.ElemType == ElemType.String)
+                    {
+                        deviceTag.DataType = TagDataType.Unicode; 
+                        deviceTag.Format = TagFormat.String;
+                    }
+
                     // add model element
                     if (groupActive)
                     {
@@ -441,21 +428,22 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                         elem.Name = elemConfig.Name; 
                         elem.Address = elemConfig.Address;
                         elem.ElemType = elemConfig.ElemType;
-                        elem.ByteOrder = SiemensS7Utils.ParseByteOrder(elemConfig.ByteOrder) ??
-                            deviceTemplate.Options.GetDefaultByteOrder(SiemensS7Utils.GetDataLength(elemConfig.ElemType));
+
+                        deviceTag.DataLen = elem.DataLength;
+                        elem.DeviceTag = deviceTag;
+
                         elemGroup.Elems.Add(elem);
+                        elemGroup.ElemData.Add(null); 
                     }
 
                     // add model command
                     if (groupCommands && !elemConfig.ReadOnly && !string.IsNullOrEmpty(elemConfig.TagCode))
                     {
-                        deviceModel.Cmds.Add(
-                            CreateSiemensS7Cmd(deviceTemplate.Options, elemGroupConfig, elemConfig ));
+                        Log.WriteLine($"--------- SiemenssS7 elemGroupConfigCmds :Address={elemConfig.Address} ElemType={elemConfig.ElemType} ");
+                        deviceModel.Cmds.Add(CreateSiemensS7Cmd(elemGroupConfig, elemConfig ));
                     }
 
-                    // add device tag
-                    tagGroup.AddTag(elemConfig.TagCode, elemConfig.Name).SetFormat(GetTagFormat(elemConfig));
-                    //elemAddrOffset += elemConfig.Quantity;
+
                 }
 
                 if (groupActive)
@@ -469,11 +457,15 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             // add model commands
             foreach (CmdConfig cmdConfig in deviceTemplate.Cmds)
             {
-                deviceModel.Cmds.Add(CreateSiemensS7Cmd(deviceTemplate.Options, cmdConfig));
+                Log.WriteLine($"--------- SiemenssS7 Cmds :Address={cmdConfig.Address} ElemType={cmdConfig.ElemType} ");
+                deviceModel.Cmds.Add(CreateSiemensS7Cmd(cmdConfig));
             }
 
             deviceModel.InitCmdMap();
-            CanSendCommands = deviceModel.Cmds.Count > 0; 
+            CanSendCommands = deviceModel.Cmds.Count > 0;
+
+
+            InitSiemensS7Poll();
         }
 
         /// <summary>
@@ -482,31 +474,123 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         public override void Session()
         {
-            Log.WriteLine("--------- SiemenssS7 Session ");
+            LastSessionTime = DateTime.UtcNow;
+            LastRequestOK = true;
 
-            if (lineData.FatalError || configError)
+            Log.WriteLine($"--------- SiemenssS7 Session ");
+            Log.WriteLine($"--------- SiemenssS7 Session ElemGroups.Count={deviceModel.ElemGroups.Count}");
+
+            #region 读取点位数据
+            if (deviceModel == null)
             {
-                DeviceStatus = DeviceStatus.Error;
+                Log.WriteLine(Locale.IsRussian ?
+                    "Невозможно опросить устройство, потому что модель устройства не определена" :
+                    "Unable to poll the device because device model is undefined");
+                SleepPollingDelay();
+                LastRequestOK = false;
             }
-            else if (lineData.ClientHelper.SiemensS7Session == null)
+            else if (deviceModel.ElemGroups.Count > 0)
             {
-                lineData.ClientHelper.Connection();
+                // request element groups
+                int elemGroupCnt = deviceModel.ElemGroups.Count;
+                int elemGroupIdx = 0;
 
-                if (!lineData.ClientHelper.SiemensS7Session.IsConnected)
+                while (elemGroupIdx < elemGroupCnt && LastRequestOK)
                 {
-                    DeviceStatus = DeviceStatus.Error;
-                    DeviceData.Invalidate();
+                    ElemGroup elemGroup = deviceModel.ElemGroups[elemGroupIdx];
+                    LastRequestOK = false;
+                    int tryNum = 0;
+                    Log.WriteLine($"--------- SiemenssS7 ReadDoRequest ");
+                    Log.WriteLine($"--------- SiemenssS7 ReadDoRequest ElemGroupName={elemGroup.Name}");
+                    //*
+                    // 采集轮循方式一：有一个bug：某一组里的点位采集报错，会一直循环采集改组，不会采集其他组数据
+                    //*/
+                    #region 采集轮循方式一
+
+                    //while (RequestNeeded(ref tryNum))
+                    //{
+                    //    // perform request
+                    //    if (lineData.ClientHelper.ReadDoRequest(elemGroup))
+                    //    {
+                    //        LastRequestOK = true;
+
+                    //        SetTagData(elemGroup);
+                    //    }
+                        
+                    //    FinishRequest();
+                    //    tryNum++;
+                    //}
+
+                    //if (LastRequestOK)
+                    //{
+                    //    // next element group
+                    //    elemGroupIdx++;
+                    //}
+                    //else if (tryNum > 0)
+                    //{
+                    //    // set tag data as undefined for the current and the next element groups
+                    //    while (elemGroupIdx < elemGroupCnt)
+                    //    {
+                    //        elemGroup = deviceModel.ElemGroups[elemGroupIdx];
+                    //        DeviceData.Invalidate(elemGroup.StartTagIdx, elemGroup.Elems.Count);
+                    //        elemGroupIdx++;
+                    //    }
+                    //}
+                    #endregion
+
+                    #region 采集轮循方式二
+
+                    while (RequestNeeded(ref tryNum))
+                    {
+                        // perform request
+                        if (lineData.ClientHelper.ReadDoRequest(elemGroup))
+                        {
+                            LastRequestOK = true;
+
+                            SetTagData(elemGroup);
+                        }
+
+                        FinishRequest();
+                        tryNum++;
+
+                        if (tryNum > ReqRetries)//组里某个点位报错，本组TryNum轮循后跳出while
+                        {
+                            LastRequestOK = true;
+                        }
+                    }
+
+                    if (LastRequestOK)
+                    {
+                        // next element group
+                        elemGroupIdx++;
+                    }
+                    else if (tryNum > 0)
+                    {
+                        // set tag data as undefined for the current and the next element groups
+                        while (elemGroupIdx < elemGroupCnt)
+                        {
+                            elemGroup = deviceModel.ElemGroups[elemGroupIdx];
+                            DeviceData.Invalidate(elemGroup.StartTagIdx, elemGroup.Elems.Count);
+                            elemGroupIdx++;
+                        }
+                    }
+                    #endregion
                 }
             }
-            else if (!lineData.ClientHelper.SiemensS7Session.IsConnected)
+            else
             {
-                DeviceStatus = DeviceStatus.Error;
-                DeviceData.Invalidate();
+                Log.WriteLine(Locale.IsRussian ?
+                    "Отсутствуют элементы для запроса" :
+                    "No elements to request");
+                SleepPollingDelay();
             }
 
-            SleepPollingDelay();
+            FinishSession();
+            #endregion
 
         }
+
+
 
         /// <summary>
         /// Sends the telecontrol command.
@@ -514,7 +598,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         public override void SendCommand(TeleCommand cmd)
         {
-            Log.WriteLine("--------- SiemenssS7 SendCommand ");
+            Log.WriteLine($"--------- SiemenssS7 SendCommand ");
             base.SendCommand(cmd);
 
             if ((deviceModel.GetCmd(cmd.CmdCode) ?? deviceModel.GetCmd(cmd.CmdNum)) is SiemensS7Cmd siemensS7Cmd)
@@ -541,7 +625,26 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
                 while (RequestNeeded(ref tryNum))
                 {
-                    if (lineData.ClientHelper.SetValue(siemensS7Cmd,cmd.GetCmdDataString()))
+                    double cmdVal = cmd.CmdVal;//纯数字值
+                    string cmdData = cmd.GetCmdDataString();//字符串数据
+
+
+                    object itemVal = null;
+                    if (siemensS7Cmd.ElemType == ElemType.S5Time || siemensS7Cmd.ElemType == ElemType.DateTime 
+                         || siemensS7Cmd.ElemType == ElemType.DateTimeLong 
+                         )
+                        itemVal = DateTime.FromOADate(cmdVal); 
+                    else if (siemensS7Cmd.ElemType == ElemType.String || siemensS7Cmd.ElemType == ElemType.S7String
+                         || siemensS7Cmd.ElemType == ElemType.S7WString || siemensS7Cmd.ElemType == ElemType.Bool
+                         )
+                        itemVal = cmdData;
+                    else
+                        itemVal = cmdVal;
+
+                    Log.WriteLine($"--------- SiemenssS7 SendCommand :Address={siemensS7Cmd.Address} ElemType={siemensS7Cmd.ElemType} " +
+                        $"cmdData={cmdData} cmdVal={cmdVal}  itemVal={itemVal} ");
+
+                    if (lineData.ClientHelper.SetValue(siemensS7Cmd, itemVal))
                         LastRequestOK = true;
 
                     FinishRequest();
@@ -550,6 +653,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             }
             else
             {
+                Log.WriteLine($"--------- SiemenssS7 SendCommand InvalidCommand");
                 LastRequestOK = false;
                 Log.WriteLine(CommPhrases.InvalidCommand);
             }

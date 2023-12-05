@@ -162,7 +162,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
             Multiple = xmlElem.GetAttrAsBool("multiple");
             CustomFuncCode = xmlElem.GetAttrAsInt("funcCode");
             Address = xmlElem.GetAttrAsString("address");
-            ElemType = xmlElem.GetAttrAsEnum("elemType", DefaultElemType);
+            ElemType = xmlElem.GetAttrAsEnum<ElemType>("elemType");
             ElemCnt = xmlElem.GetAttrAsInt("elemCnt", 1);
             ByteOrder = xmlElem.GetAttrAsString("byteOrder");
             CmdNum = xmlElem.GetAttrAsInt("cmdNum");
@@ -182,9 +182,9 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
 
             if (DataBlock == DataBlock.Input)
             {
-                xmlElem.SetAttribute("funcCode", CustomFuncCode);
+                //xmlElem.SetAttribute("funcCode", CustomFuncCode);
                 xmlElem.SetAttribute("address", Address);
-                xmlElem.SetAttribute("elemType", ElemType.ToString().ToLowerInvariant());
+                xmlElem.SetAttribute("elemType", ElemType.ToString());
             }
             else
             {
@@ -192,7 +192,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
                 xmlElem.SetAttribute("address", Address);
 
                 //if (ElemTypeEnabled)
-                    xmlElem.SetAttribute("elemType", ElemType.ToString().ToLowerInvariant());
+                    xmlElem.SetAttribute("elemType", ElemType.ToString());
 
                 if (Multiple)
                     xmlElem.SetAttribute("elemCnt", ElemCnt);
