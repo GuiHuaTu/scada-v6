@@ -406,16 +406,22 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                 case ElemType.UShort:
                     return VarType.Word;
                     break;
+                case ElemType.Long:
+                    return VarType.LReal;
+                    break;
                 case ElemType.ULong:
-                    return VarType.DWord;
+                    return VarType.LReal;
                     break;
                 case ElemType.Short:
                     return VarType.Int;
                     break;
                 case ElemType.UInt:
-                    return VarType.DInt;
+                    return VarType.DWord;
                     break;
                 case ElemType.Int:
+                    return VarType.DInt;
+                    break;
+                case ElemType.Float:
                     return VarType.Real;
                     break;
                 case ElemType.Double:

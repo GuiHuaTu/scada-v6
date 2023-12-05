@@ -262,9 +262,13 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                 case ElemType.UInt:
                 case ElemType.Int:
                 case ElemType.Float:
-                    return 2;
-                default: // Undefined, Bool
+                    return 2; 
+                case ElemType.Bool:
+                case ElemType.Byte:
+                case ElemType.UShort: // Undefined, Bool
                     return 1;
+                default: // Undefined, Bool
+                    return 2; 
             }
         }
 
