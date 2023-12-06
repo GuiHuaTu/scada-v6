@@ -190,7 +190,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                 {
                     try
                     {
-                        log.WriteLine("");
+                        //log.WriteLine("");
                         string val = ReadValue(elemGroup.Elems[i]).ToString();
 
                         //log.WriteLine($"--------- SiemenssS7 ReadValue:ElemName={elemGroup.Elems[i].Name} Address={elemGroup.Elems[i].Address}" +

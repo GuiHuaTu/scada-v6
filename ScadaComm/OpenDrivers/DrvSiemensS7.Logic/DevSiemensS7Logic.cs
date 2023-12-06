@@ -180,7 +180,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         private void SetTagData(ElemGroup elemGroup)
         {
-             Log.WriteLine($"--------- SiemenssS7 SetTagData ");
+             //Log.WriteLine($"--------- SiemenssS7 SetTagData ");
             int tagStatus = LastRequestOK ? CnlStatusID.Defined : CnlStatusID.Undefined;
 
              //Log.WriteLine($"--------- SiemenssS7 SetTagData Status={tagStatus}");
