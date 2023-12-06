@@ -478,8 +478,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                     deviceModel.ElemGroups.Add(elemGroup);
                 }
 
-                DeviceTags.AddGroup(tagGroup);
-                publishCnlNums = cnlNumList.ToArray();
+                DeviceTags.AddGroup(tagGroup); 
             }
 
             // add model commands
@@ -520,6 +519,15 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             }
             else if (deviceModel.ElemGroups.Count > 0)
             {
+                if (!lineData.ClientHelper.SiemensS7Session.IsConnected)
+                {
+                    Log.WriteLine($"--------- SiemenssS7 Session Connection Fail");
+                    DeviceStatus = DeviceStatus.Error;
+                    DeviceData.Invalidate();
+
+
+                    InitSiemensS7Poll();
+                }
                 // request element groups
                 int elemGroupCnt = deviceModel.ElemGroups.Count;
                 int elemGroupIdx = 0;
