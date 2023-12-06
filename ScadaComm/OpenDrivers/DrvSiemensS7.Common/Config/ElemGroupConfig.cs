@@ -44,7 +44,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
         {
             get
             {
-                return DataBlock == DataBlock.Output || DataBlock == DataBlock.Counter || DataBlock == DataBlock.Timer;
+                return DataBlock == DataBlock.Input || DataBlock == DataBlock.Memory || DataBlock == DataBlock.DataBlock || DataBlock == DataBlock.Timer;
             }
         }
 

@@ -114,7 +114,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         private SiemensS7Cmd CreateSiemensS7Cmd(ElemGroupConfig elemGroupConfig, ElemConfig elemConfig )
         {
-            SiemensS7Cmd siemensS7Cmd = deviceModel.CreateSiemensS7Cmd(elemGroupConfig.DataBlock, elemConfig.Quantity > 1);
+            SiemensS7Cmd siemensS7Cmd = deviceModel.CreateSiemensS7Cmd(elemGroupConfig.DataBlock, elemGroupConfig.Multiple);
             siemensS7Cmd.Name = elemConfig.Name;
             siemensS7Cmd.Address = elemConfig.Address;
             siemensS7Cmd.ElemType = elemConfig.ElemType;
@@ -666,6 +666,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         {
             Log.WriteLine($"--------- SiemenssS7 SendCommand ");
             base.SendCommand(cmd);
+            Log.WriteLine($"--------- SiemenssS7 SendCommand  cmds.count={deviceModel.Cmds.Count}  CmdCode={cmd.CmdCode}   CmdNum={cmd.CmdNum}");
 
             if ((deviceModel.GetCmd(cmd.CmdCode) ?? deviceModel.GetCmd(cmd.CmdNum)) is SiemensS7Cmd siemensS7Cmd)
             {
