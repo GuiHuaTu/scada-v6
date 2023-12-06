@@ -59,19 +59,31 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
         /// </summary>
         Bool,
 
+
+        //S7.net
         /// <summary>
-        /// Unsigned 8-bit.
+        /// 8-bit
         /// </summary>
         Byte,
-
         /// <summary>
-        /// Unsigned 8-bit.
+        ///  S7 Array of Chars (like a const char[N] C-String) char=16-bit
         /// </summary>
         String,
-
+        /// <summary>
+        /// S7 string with 2-byte header.
+        /// </summary>
         S7String,
+        /// <summary>
+        ///  S7 wstring with 4-byte header.
+        /// </summary>
         S7WString,
+        /// <summary>
+        /// Timer variable type 16bit(ms)
+        /// </summary>
         S5Time,
+        /// <summary>
+        /// 2 bytes  ushort (UInt16)
+        /// </summary>
         Counter,
         DateTime,
         DateTimeLong

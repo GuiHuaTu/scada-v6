@@ -103,7 +103,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
                 //elemConfig.IsBitMask = elemElem.GetAttrAsBool("isBitMask", defaultBitMask);
                 elemConfig.TagCode = elemElem.GetAttrAsString("tagCode");
                 elemConfig.Name = elemElem.GetAttrAsString("name");
-                elemConfig.Address = elemElem.GetAttrAsString("address"); 
+                elemConfig.Address = elemElem.GetAttrAsString("address");
+                //elemConfig.CnlNum = elemElem.GetAttrAsInt("cnlNum");
 
                 Elems.Add(elemConfig);
             }
@@ -146,6 +147,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
                 elemElem.SetAttribute("tagCode", elemConfig.TagCode);
                 elemElem.SetAttribute("name", elemConfig.Name);
                 elemElem.SetAttribute("address", elemConfig.Address);
+                //elemElem.SetAttribute("cnlNum", elemConfig.CnlNum);
             }
         }
     }

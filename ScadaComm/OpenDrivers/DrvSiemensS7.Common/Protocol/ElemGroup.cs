@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Linq;
 
 namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
@@ -186,50 +188,83 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
             return new Elem();
         }
 
-        ///// <summary>
-        ///// Gets the element value according to its type, converted to double.
-        ///// </summary>
-        //public double GetElemVal(int elemIdx)
-        //{
-        //    Elem elem = Elems[elemIdx];
-        //    byte[] elemData = ElemData[elemIdx];
-        //    byte[] buf;
+        /// <summary>
+        /// Gets the element value according to its type, converted to double.
+        /// </summary>
+        public double GetElemVal(ElemType elemType ,object elemData)
+        {
+            byte[] buf = Serialize(elemData);
 
-        //    // order bytes if needed
-        //    if (elem.ByteOrder == null)
-        //    {
-        //        buf = elemData;
-        //    }
-        //    else
-        //    {
-        //        buf = new byte[elemData.Length];
-        //        SiemensS7Utils.ApplyByteOrder(elemData, buf, elem.ByteOrder);
-        //    }
+            // calculate value
+            switch (elemType)
+            {
+                case ElemType.UShort:
+                    return BitConverter.ToUInt16(buf, 0);
+                case ElemType.Short:
+                    return BitConverter.ToInt16(buf, 0);
+                case ElemType.UInt:
+                    return BitConverter.ToUInt32(buf, 0);
+                case ElemType.Int:
+                    return BitConverter.ToInt32(buf, 0);
+                case ElemType.ULong: // possible data loss
+                    return BitConverter.ToUInt64(buf, 0);
+                case ElemType.Long:  // possible data loss
+                    return BitConverter.ToInt64(buf, 0);
+                case ElemType.Float:
+                    return BitConverter.ToSingle(buf, 0);
+                case ElemType.Double:
+                    return BitConverter.ToDouble(buf, 0);
+                case ElemType.Bool:
+                    return buf[0] > 0 ? 1.0 : 0.0;
 
-        //    // calculate value
-        //    switch (elem.ElemType)
-        //    {
-        //        case ElemType.UShort:
-        //            return BitConverter.ToUInt16(buf, 0);
-        //        case ElemType.Short:
-        //            return BitConverter.ToInt16(buf, 0);
-        //        case ElemType.UInt:
-        //            return BitConverter.ToUInt32(buf, 0);
-        //        case ElemType.Int:
-        //            return BitConverter.ToInt32(buf, 0);
-        //        case ElemType.ULong: // possible data loss
-        //            return BitConverter.ToUInt64(buf, 0);
-        //        case ElemType.Long:  // possible data loss
-        //            return BitConverter.ToInt64(buf, 0);
-        //        case ElemType.Float:
-        //            return BitConverter.ToSingle(buf, 0);
-        //        case ElemType.Double:
-        //            return BitConverter.ToDouble(buf, 0);
-        //        case ElemType.Bool:
-        //            return buf[0] > 0 ? 1.0 : 0.0;
-        //        default:
-        //            return 0.0;
-        //    }
-        //}
+
+                case ElemType.Byte:
+
+                case ElemType.String:
+
+                case ElemType.S7String:
+
+                case ElemType.S7WString:
+
+                case ElemType.S5Time:
+
+                case ElemType.Counter:
+
+                case ElemType.DateTime:
+
+                case ElemType.DateTimeLong:
+
+                default:
+                    return 0.0;
+            }
+        } 
+         
+        /// <summary>
+        /// 序列化
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static byte[] Serialize(object obj)
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream stream = new MemoryStream();
+            bf.Serialize(stream, obj);
+            byte[] datas = stream.ToArray();
+            stream.Dispose();
+            return datas;
+        }
+        /// <summary>
+        /// 反序列化
+        /// </summary>
+        /// <param name="datas"></param>
+        /// <returns></returns>
+        public static object Deserialize(byte[] datas)
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream stream = new MemoryStream(datas, 0, datas.Length);
+            object obj = bf.Deserialize(stream);
+            stream.Dispose();
+            return obj;
+        }
     }
 }

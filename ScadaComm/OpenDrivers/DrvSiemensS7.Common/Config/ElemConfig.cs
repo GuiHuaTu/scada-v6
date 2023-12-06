@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Scada.Comm.Drivers.DrvSiemensS7.Protocol;
+//using Scada.ComponentModel;
 using System.Net;
 
 namespace Scada.Comm.Drivers.DrvSiemensS7.Config
@@ -26,6 +27,11 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
             IsBitMask = false;
         }
 
+        /// <summary>
+        /// Gets or sets the number of the published channel.
+        /// </summary>
+        //[DisplayName, Category, Description]
+        //public int CnlNum { get; set; } = 0;
 
         /// <summary>
         /// Gets or sets the element name.
