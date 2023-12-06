@@ -177,15 +177,15 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
         //public RequestDelegate DoRequest { get; protected set; }
         public ReadDelegate ReadDoRequest { get; protected set; } 
 
-        private bool Read(ElemGroup elemGroup)
+        public bool Read(ElemGroup elemGroup)
         {
 
             if (elemGroup.Elems.Count > 0)
             {
                 int okCount = 0;
-                log.WriteLine($"------------------------------------------------------------------------------------------");
-                log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:Start");
-                log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:ElemGroup.Elems.Count={elemGroup.Elems.Count}");
+                //log.WriteLine($"------------------------------------------------------------------------------------------");
+                //log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:Start");
+                //log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:ElemGroup.Elems.Count={elemGroup.Elems.Count}");
                 for (int i = 0; i < elemGroup.Elems.Count; i++)
                 {
                     try
@@ -193,11 +193,11 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                         log.WriteLine("");
                         string val = ReadValue(elemGroup.Elems[i]).ToString();
 
-                        log.WriteLine($"--------- SiemenssS7 ReadValue:ElemName={elemGroup.Elems[i].Name} Address={elemGroup.Elems[i].Address}" +
-                            $" ElemType={elemGroup.Elems[i].ElemType} ReadValue={val}");
+                        //log.WriteLine($"--------- SiemenssS7 ReadValue:ElemName={elemGroup.Elems[i].Name} Address={elemGroup.Elems[i].Address}" +
+                        //    $" ElemType={elemGroup.Elems[i].ElemType} ReadValue={val}");
 
-                        log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:ElemGroup.ElemData.Count={elemGroup.ElemData.Count}");
-                        
+                        //log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:ElemGroup.ElemData.Count={elemGroup.ElemData.Count}");
+
                         elemGroup.ElemData[i] = val;
 
                         okCount = okCount + 1;
@@ -210,11 +210,11 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
 
                 if(okCount == elemGroup.Elems.Count)//采集全部成功
                 {
-                    log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:OK");
+                    //log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:OK");
                     return true;
                 }
                 else{
-                    log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:Err");
+                    //log.WriteLine($"--------- SiemenssS7 Read ElemGroupName={elemGroup.Name}:Err");
                     return false;
                 }
             }
@@ -226,7 +226,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
 
 
 
-        private object ReadValue(Elem elem)
+        public object ReadValue(Elem elem)
         {
 
             if (SiemensS7Session != null && SiemensS7Session.IsConnected)
@@ -234,11 +234,12 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                 var plcData = new PLCAddress(elem.Address);
                 VarType useType = GetS7VarTypeByElemType(elem.ElemType);
 
-                log.WriteLine($"--------- SiemenssS7 ReadValue:ElemName={elem.Name} Address={elem.Address} ElemType={elem.ElemType} VarType={useType}");
+                //log.WriteLine($"--------- SiemenssS7 ReadValue:ElemName={elem.Name} Address={elem.Address} ElemType={elem.ElemType} VarType={useType}");
                 switch (useType)
                 {
                     case VarType.Bit:
-                        return SiemensS7Session.Read(elem.Address);
+                        bool result = Convert.ToBoolean(SiemensS7Session.Read(elem.Address));
+                        return result ? 1 : 0;
                         break;
                     case VarType.Byte:
                         return SiemensS7Session.Read(elem.Address);

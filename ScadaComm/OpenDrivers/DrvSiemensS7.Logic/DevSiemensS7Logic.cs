@@ -14,6 +14,7 @@ using Scada.Data.Entities;
 using Scada.Data.Models;
 using Scada.Data.Tables;
 using Scada.Lang;
+using Scada.Log;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -37,6 +38,14 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             public bool FatalError { get; set; } = false;
             public SiemensS7Poll ClientHelper { get; set; }
             public override string ToString() => CommPhrases.SharedObject;
+        }
+
+        /// <summary>
+        /// Represents metadata about a device tag.
+        /// </summary>
+        private class DeviceTagMeta
+        {
+            public Type ActualDataType { get; set; }
         }
 
 
@@ -165,6 +174,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
         }
 
+
         /// <summary>
         /// Sets the data of the element group tags.
         /// </summary>
@@ -173,25 +183,25 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
              Log.WriteLine($"--------- SiemenssS7 SetTagData ");
             int tagStatus = LastRequestOK ? CnlStatusID.Defined : CnlStatusID.Undefined;
 
-             Log.WriteLine($"--------- SiemenssS7 SetTagData Status={tagStatus}"); 
+             //Log.WriteLine($"--------- SiemenssS7 SetTagData Status={tagStatus}");
 
-            //for (int elemIdx = 0, tagIdx = elemGroup.StartTagIdx + elemIdx, cnt = elemGroup.Elems.Count; 
-            //    elemIdx < cnt; elemIdx++, tagIdx++)
-            //{
-            //    Log.WriteLine($"--------- {elemGroup.Elems[elemIdx].DeviceTag.Index}-{elemGroup.Elems[elemIdx].DeviceTag.Code} :   {elemGroup.ElemData[elemIdx]}");
-            //    DeviceData.Set(elemGroup.Elems[elemIdx].DeviceTag, elemGroup.ElemData[elemIdx], tagStatus);
-            //}
-            for (int i=0;i< elemGroup.Elems.Count;i++)
+            //Log.WriteLine($"--------- SiemenssS7 SetTagData  elemGroup.Elems.Count={elemGroup.Elems.Count}  elemGroup.ElemData={elemGroup.ElemData.Count}");
+            for(int i = 0;i < elemGroup.Elems.Count;i++)
             {
-                DeviceTag deviceTag = elemGroup.Elems[i].DeviceTag;
+                DeviceTag deviceTag = elemGroup.Elems[i].DeviceTag; 
+                ElemType elemType = elemGroup.Elems[i].ElemType;
                 object val = elemGroup.ElemData[i];
-                Log.WriteLine($"--------- SiemenssS7 SetTagData deviceTag.Index={deviceTag.Index} deviceTag.Name={deviceTag.Name}  deviceTag.Val={val}");
+       
+                if (deviceTag.Aux is DeviceTagMeta tagMeta && val != null)
+                    tagMeta.ActualDataType = val.GetType();
 
-                DeviceData.Set(deviceTag, val, tagStatus);
+                //Log.WriteLine($"--------- SiemenssS7 SetTagData val={val}");
 
-                DeviceData.Invalidate(deviceTag.Index);
+                DeviceData.Set(deviceTag.Code, Convert.ToDouble(val), tagStatus);
+
             }
-             
+
+
         }
  
 
@@ -415,28 +425,28 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                     //elemGroup.Address = elemGroupConfig.Address;
                     elemGroup.StartTagIdx = DeviceTags.Count;
                 }
-                 
 
-                
                 for (int i=0;i< elemGroupConfig.Elems.Count;i++)
                 {
-                    int cnlNum = i;
                     ElemConfig elemConfig = elemGroupConfig.Elems[i];
+
                     // add device tag 
                     DeviceTag deviceTag;
 
-                    if (cnlTable?.GetItem(cnlNum) is Cnl cnl && cnl.Active)
+                    if (cnlTable?.SelectFirst(new TableFilter() { ColumnName = "Code",Argument = elemConfig.TagCode}) is Cnl cnl
+                        && cnl.Active)
                     {
-                        deviceTag = tagGroup.AddTag("", cnl.Name);
+                        //Log.WriteLine($"--------- SiemenssS7 cnl.CnlNum={cnl.CnlNum} cnl.TagCode={cnl.TagCode} cnl.Code={cnl.Code} cnl.Name={cnl.Name} cnl.Active ={ cnl.Active} ");
+                        deviceTag = tagGroup.AddTag(cnl.Code, cnl.Name);
                         deviceTag.Cnl = cnl;
-                        Log.WriteLine($"--------- SiemenssS7 cnl.TagCode={cnl.TagCode} cnl.Name={cnl.Name} cnl.Active={cnl.Active}");
-                    }
+                    } 
                     else
                     {
-                        Log.WriteLine($"--------- SiemenssS7 tagGroup.AddTag");
-                        deviceTag = tagGroup.AddTag("", Locale.IsRussian ?
-                            "Канал " + cnlNum :
-                            "Channel " + cnlNum);
+                        //Log.WriteLine($"--------- SiemenssS7 tagGroup.AddTag：{elemConfig.TagCode} {elemConfig.Name}  ");
+                        //deviceTag = tagGroup.AddTag(elemConfig.TagCode, elemConfig.Name);
+                        deviceTag = elemConfig.ToDeviceTag();
+                        tagGroup.DeviceTags.Add(deviceTag);
+
                     }
 
                     deviceTag.SetFormat(GetTagFormat(elemConfig));
@@ -455,12 +465,14 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                         elem.ElemType = elemConfig.ElemType;
 
                         deviceTag.DataLen = elem.DataLength;
-                        deviceTag.Cnl = new Data.Entities.Cnl();
+
                         elem.DeviceTag = deviceTag;
 
+                        //Log.WriteLine($"--------- SiemenssS7 SetTagData deviceTag.TagNum={deviceTag.TagNum} deviceTag.Code={deviceTag.Code} " +
+                        //    $"deviceTag.Index={deviceTag.Index}  deviceTag.DataLength={deviceTag.DataLength}  ");
 
                         elemGroup.Elems.Add(elem);
-                        elemGroup.ElemData.Add(null); 
+                        elemGroup.ElemData.Add(new object()); 
 
                         cnlNumList.Add(elemGroup.Elems.Count);
                     }
@@ -468,7 +480,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                     // add model command
                     if (groupCommands && !elemConfig.ReadOnly && !string.IsNullOrEmpty(elemConfig.TagCode))
                     {
-                        Log.WriteLine($"--------- SiemenssS7 elemGroupConfigCmds :Address={elemConfig.Address} ElemType={elemConfig.ElemType} ");
+                        //Log.WriteLine($"--------- SiemenssS7 elemGroupConfigCmds :Address={elemConfig.Address} ElemType={elemConfig.ElemType} ");
                         deviceModel.Cmds.Add(CreateSiemensS7Cmd(elemGroupConfig, elemConfig ));
                     }
                 }
@@ -484,7 +496,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             // add model commands
             foreach (CmdConfig cmdConfig in deviceTemplate.Cmds)
             {
-                Log.WriteLine($"--------- SiemenssS7 Cmds :Address={cmdConfig.Address} ElemType={cmdConfig.ElemType} ");
+                //Log.WriteLine($"--------- SiemenssS7 Cmds :Address={cmdConfig.Address} ElemType={cmdConfig.ElemType} ");
                 deviceModel.Cmds.Add(CreateSiemensS7Cmd(cmdConfig));
             }
 
@@ -505,8 +517,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             LastSessionTime = DateTime.UtcNow;
             LastRequestOK = true;
 
-            Log.WriteLine($"--------- SiemenssS7 Session ");
-            Log.WriteLine($"--------- SiemenssS7 Session ElemGroups.Count={deviceModel.ElemGroups.Count}");
+            //Log.WriteLine($"--------- SiemenssS7 Session ");
+            //Log.WriteLine($"--------- SiemenssS7 Session ElemGroups.Count={deviceModel.ElemGroups.Count}");
 
             #region 读取点位数据
             if (deviceModel == null)
@@ -537,8 +549,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                     ElemGroup elemGroup = deviceModel.ElemGroups[elemGroupIdx];
                     LastRequestOK = false;
                     int tryNum = 0;
-                    Log.WriteLine($"--------- SiemenssS7 ReadDoRequest ");
-                    Log.WriteLine($"--------- SiemenssS7 ReadDoRequest ElemGroupName={elemGroup.Name}");
+                    //Log.WriteLine($"--------- SiemenssS7 ReadDoRequest ");
+                    //Log.WriteLine($"--------- SiemenssS7 ReadDoRequest ElemGroupName={elemGroup.Name}");
                     //*
                     // 采集轮循方式一：有一个bug：某一组里的点位采集报错，会一直循环采集改组，不会采集其他组数据
                     //*/
@@ -586,6 +598,21 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
                             SetTagData(elemGroup);
                         }
+                        //foreach (var elem in elemGroup.Elems )
+                        //{ 
+                        //    Object val =  lineData.ClientHelper.ReadValue(elem);
+                        //    //Log.WriteLine($"--------- SiemenssS7 ReadValue:ElemName={elem.Name} Address={elem.Address} ElemType={elem.ElemType} Var={val}");
+
+                        //    if (elem.DeviceTag.Aux is DeviceTagMeta tagMeta && val != null)
+                        //        tagMeta.ActualDataType = val.GetType();
+
+
+                        //    LastRequestOK = true;
+                        //    int tagStatus = LastRequestOK ? CnlStatusID.Defined : CnlStatusID.Undefined;
+
+                        //    DeviceData.Set(elem.DeviceTag.Code, Convert.ToDouble(val));
+                        //}
+
 
                         FinishRequest();
                         tryNum++;
@@ -613,6 +640,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                     }
                     #endregion
                 }
+
+
             }
             else
             {
@@ -672,9 +701,19 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                          )
                         itemVal = DateTime.FromOADate(cmdVal); 
                     else if (siemensS7Cmd.ElemType == ElemType.String || siemensS7Cmd.ElemType == ElemType.S7String
-                         || siemensS7Cmd.ElemType == ElemType.S7WString || siemensS7Cmd.ElemType == ElemType.Bool
+                         || siemensS7Cmd.ElemType == ElemType.S7WString  
                          )
                         itemVal = cmdData;
+                    else if (siemensS7Cmd.ElemType == ElemType.Bool
+                         )
+                        if (!string.IsNullOrEmpty(cmdData) && double.IsNaN( cmdVal ))
+                        {
+                            itemVal = cmdData == "True" || cmdData == "true" || cmdData == "1" ? 1:0;
+                        }
+                        else
+                        {
+                            itemVal = cmdVal;
+                        }
                     else
                         itemVal = cmdVal;
 

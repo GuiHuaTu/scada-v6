@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DrvSiemensS7.Logic": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
