@@ -311,7 +311,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                     switch (useType)
                     {
                         case VarType.Bit:
-                            SiemensS7Session.Write(plcData.DataType, plcData.DbNumber, plcData.StartByte, Convert.ToBoolean(value));
+                            SiemensS7Session.Write(plcData.DataType, plcData.DbNumber, plcData.StartByte, Convert.ToBoolean(value), plcData.BitNumber);
                             break;
                         case VarType.Byte:
                             SiemensS7Session.Write(plcData.DataType, plcData.DbNumber, plcData.StartByte, Convert.ToByte(value));
