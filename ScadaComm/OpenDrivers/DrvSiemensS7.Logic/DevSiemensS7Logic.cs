@@ -33,9 +33,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// Contains data common to a communication line.
         /// </summary>
         private class SiemensS7LineData
-        {
-            public ScadaClient ScadaClient { get; set; }
-            public bool FatalError { get; set; } = false;
+        { 
             public SiemensS7Poll ClientHelper { get; set; }
             public override string ToString() => CommPhrases.SharedObject;
         }
@@ -62,9 +60,6 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             }
         }
 
-        private int[] publishCnlNums;                 // the numbers of the published channels
-        private long cnlListID;                       // the cached channel list ID
-        private readonly DeviceTemplate config;             // the device configuration
         private bool configError;                            // indicates that that device configuration is not loaded
         private SiemensS7LineData lineData;                      // data common to the communication line
         protected string cpuType;     // the cpu type of the communication line
@@ -92,9 +87,6 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
             deviceModel = null;
             lineData = null;
-
-            publishCnlNums = null;
-            cnlListID = 0;
 
             Log.WriteLine($"S7连接配置:CpuType={cpuType},PlcIP={plcIP},PlcRack={plcRack},PlcSlot={plcSlot}");
 
@@ -148,11 +140,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
         /// </summary>
         private void InitSiemensS7Poll()
         {
-            if (lineData.FatalError || configError)
-            {
-                DeviceStatus = DeviceStatus.Error;
-            }
-            else if (lineData.ClientHelper.SiemensS7Session == null)
+            if (lineData.ClientHelper.SiemensS7Session == null)
             {
                 Log.WriteLine($"--------- SiemenssS7 Session Connection");
                 lineData.ClientHelper.Connection();
@@ -314,7 +302,6 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             else
             {
                 SiemensS7LineConfig lineConfig = new SiemensS7LineConfig();
-                bool lineConfigError = false;
                 lineConfig.ConnectionOptions.CpuType = cpuType;
                 lineConfig.ConnectionOptions.PlcIP = plcIP;
                 lineConfig.ConnectionOptions.PlcRack= plcRack;
@@ -324,10 +311,6 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                     $",PlcSlot={lineConfig.ConnectionOptions.PlcSlot}" );
                 lineData = new SiemensS7LineData()
                 {
-                    FatalError = lineConfigError,
-
-                    ScadaClient = new ScadaClient(CommContext.AppConfig.ConnectionOptions),
-
                     ClientHelper = new SiemensS7Poll(lineConfig.ConnectionOptions, Log, Storage)
                     {
                         Timeout = PollingOptions.Timeout,
@@ -406,7 +389,6 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
             // create device model
             deviceModel = CreateDeviceModel();
             deviceModel.Addr = (byte)NumAddress;
-            List<int> cnlNumList = new List<int>();
 
             // add model elements and device tags
             foreach (ElemGroupConfig elemGroupConfig in deviceTemplate.ElemGroups)
@@ -414,8 +396,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                 bool groupActive = elemGroupConfig.Active;
                 bool groupCommands = groupActive && elemGroupConfig.ReadOnlyEnabled;
                 ElemGroup elemGroup = null;
-                TagGroup tagGroup = new TagGroup(elemGroupConfig.Name) { Hidden = !groupActive };
-                BaseTable<Cnl> cnlTable = CommContext.ConfigDatabase?.CnlTable;
+                TagGroup tagGroup = new TagGroup(elemGroupConfig.Name) { Hidden = !groupActive }; 
                 //int elemAddrOffset = 0;
 
                 if (groupActive)
@@ -433,21 +414,11 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                     // add device tag 
                     DeviceTag deviceTag;
 
-                    if (cnlTable?.SelectFirst(new TableFilter() { ColumnName = "Code",Argument = elemConfig.TagCode}) is Cnl cnl
-                        && cnl.Active)
-                    {
-                        //Log.WriteLine($"--------- SiemenssS7 cnl.CnlNum={cnl.CnlNum} cnl.TagCode={cnl.TagCode} cnl.Code={cnl.Code} cnl.Name={cnl.Name} cnl.Active ={ cnl.Active} ");
-                        deviceTag = tagGroup.AddTag(cnl.Code, cnl.Name);
-                        deviceTag.Cnl = cnl;
-                    } 
-                    else
-                    {
-                        //Log.WriteLine($"--------- SiemenssS7 tagGroup.AddTag：{elemConfig.TagCode} {elemConfig.Name}  ");
-                        //deviceTag = tagGroup.AddTag(elemConfig.TagCode, elemConfig.Name);
-                        deviceTag = elemConfig.ToDeviceTag();
-                        tagGroup.DeviceTags.Add(deviceTag);
-
-                    }
+    
+                    //Log.WriteLine($"--------- SiemenssS7 tagGroup.AddTag：{elemConfig.TagCode} {elemConfig.Name}  ");
+                    //deviceTag = tagGroup.AddTag(elemConfig.TagCode, elemConfig.Name);
+                    deviceTag = elemConfig.ToDeviceTag();
+                    tagGroup.DeviceTags.Add(deviceTag);
 
                     deviceTag.SetFormat(GetTagFormat(elemConfig));
                     if (elemConfig.ElemType == ElemType.String)
@@ -474,7 +445,6 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                         elemGroup.Elems.Add(elem);
                         elemGroup.ElemData.Add(new object()); 
 
-                        cnlNumList.Add(elemGroup.Elems.Count);
                     }
 
                     // add model command
@@ -502,8 +472,6 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
             deviceModel.InitCmdMap();
             CanSendCommands = deviceModel.Cmds.Count > 0;
-
-            publishCnlNums = cnlNumList.ToArray();
 
             InitSiemensS7Poll();
         }

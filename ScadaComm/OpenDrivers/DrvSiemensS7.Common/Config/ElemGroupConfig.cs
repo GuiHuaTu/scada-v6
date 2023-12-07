@@ -82,7 +82,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Config
                 throw new ArgumentNullException(nameof(xmlElem));
 
             Active = xmlElem.GetAttrAsBool("active");
-            DataBlock = xmlElem.GetAttrAsEnum("dataBlock", xmlElem.GetAttrAsEnum<DataBlock>("tableType")); 
+            DataBlock = xmlElem.GetAttrAsEnum<DataBlock>("dataBlock"); 
             Name = xmlElem.GetAttrAsString("name");
             Address = xmlElem.GetAttrAsString("address");
 
