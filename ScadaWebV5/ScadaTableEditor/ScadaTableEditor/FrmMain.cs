@@ -361,7 +361,8 @@ namespace ScadaTableEditor
         private void LoadSettings()
         {
             // установка директории по умолчанию
-            baseDATDir = @"C:\SCADA\BaseDAT\";
+            //baseDATDir = @"C:\SCADA\BaseDAT\";  //V5
+            baseDATDir = @"C:\Program Files\SCADA\BaseDAT\";  //V6 
 
             // загрузка директории
             try
