@@ -1,0 +1,1 @@
+Log、ScadaData、ScadaWebV5 从v5版本迁移过来的。
