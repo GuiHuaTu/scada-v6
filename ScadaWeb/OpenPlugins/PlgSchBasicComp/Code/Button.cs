@@ -37,8 +37,9 @@ namespace Scada.Web.Plugins.PlgSchBasicComp.Code
         public Button()
             : base()
         {
-            //serBinder = PlgUtils.SerializationBinder;
 
+            BackColorOnHover = "";
+            BorderColorOnHover = "";
             ForeColor = "";
             Font = null;
             ImageName = "";
@@ -51,6 +52,26 @@ namespace Scada.Web.Plugins.PlgSchBasicComp.Code
             Size = DefaultSize;
         }
 
+
+        /// <summary>
+        /// Получить или установить цвет фона при наведении указателя мыши
+        /// </summary>
+        #region Attributes
+        [DisplayName("Back color on hover"), Category(Categories.Behavior)]
+        [Description("The background color of the component when user rests the pointer on it.")]
+        //[Editor(typeof(ColorEditor), typeof(UITypeEditor))]
+        #endregion
+        public string BackColorOnHover { get; set; }
+
+        /// <summary>
+        /// Получить или установить цвет рамки при наведении указателя мыши
+        /// </summary>
+        #region Attributes
+        [DisplayName("Border color on hover"), Category(Categories.Behavior)]
+        [Description("The border color of the component when user rests the pointer on it.")]
+        //[Editor(typeof(ColorEditor), typeof(UITypeEditor))]
+        #endregion
+        public string BorderColorOnHover { get; set; }
 
         /// <summary>
         /// Получить или установить цвет текста
@@ -139,8 +160,8 @@ namespace Scada.Web.Plugins.PlgSchBasicComp.Code
         [DefaultValue(0)]
         #endregion
         public int CtrlCnlNum { get; set; }
-        
-        
+
+
         /// <summary>
         /// Загрузить конфигурацию компонента из XML-узла
         /// </summary>
@@ -148,6 +169,8 @@ namespace Scada.Web.Plugins.PlgSchBasicComp.Code
         {
             base.LoadFromXml(xmlNode);
 
+            BackColorOnHover = xmlNode.GetChildAsString("BackColorOnHover");
+            BorderColorOnHover = xmlNode.GetChildAsString("BorderColorOnHover");
             ForeColor = xmlNode.GetChildAsString("ForeColor");
             Font = Font.GetChildAsFont(xmlNode, "Font");
             ImageName = xmlNode.GetChildAsString("ImageName");
@@ -166,6 +189,8 @@ namespace Scada.Web.Plugins.PlgSchBasicComp.Code
         {
             base.SaveToXml(xmlElem);
 
+            xmlElem.AppendElem("BackColorOnHover", BackColorOnHover);
+            xmlElem.AppendElem("BorderColorOnHover", BorderColorOnHover);
             xmlElem.AppendElem("ForeColor", ForeColor);
             Font.AppendElem(xmlElem, "Font", Font);
             xmlElem.AppendElem("ImageName", ImageName);

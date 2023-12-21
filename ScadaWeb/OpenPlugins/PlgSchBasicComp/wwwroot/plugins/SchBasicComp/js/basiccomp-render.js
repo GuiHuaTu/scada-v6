@@ -71,6 +71,23 @@ scada.scheme.ButtonRenderer.prototype.createDom = function (component, renderCon
 
     btnComp.append(btnContainer);
     component.dom = btnComp;
+
+
+    var spanComp = component.dom.first();
+
+    // apply properties on hover
+    var thisRenderer = this;
+
+    spanComp.hover(
+        function () {
+            thisRenderer.setBackColor(spanComp, props.backColorOnHover);
+            // thisRenderer.setBorderColor(spanComp, props.borderColorOnHover);
+        },
+        function () {
+            thisRenderer.setBackColor(spanComp, props.backColor, true);
+            //thisRenderer.setBorderColor(spanComp, props.borderColor, true);
+        }
+    );
 };
 
 scada.scheme.ButtonRenderer.prototype.refreshImages = function (component, renderContext, imageNames) {
