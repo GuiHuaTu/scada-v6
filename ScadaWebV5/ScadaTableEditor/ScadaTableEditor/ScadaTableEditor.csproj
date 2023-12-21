@@ -61,6 +61,10 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PlgConfig, Version=5.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\OpenPlugins\PlgConfig\bin\PlgConfig.dll</HintPath>
+    </Reference>
     <Reference Include="PlgTable">
       <HintPath>..\..\ScadaTable\PlgTable\obj\Release\PlgTable.dll</HintPath>
     </Reference>
@@ -141,9 +145,11 @@
   <ItemGroup>
     <Content Include="..\..\..\ScadaData\ScadaData\Lang\ScadaData.en-GB.xml">
       <Link>Lang\ScadaData.en-GB.xml</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\..\ScadaData\ScadaData\Lang\ScadaData.ru-RU.xml">
       <Link>Lang\ScadaData.ru-RU.xml</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="edit.ico" />
     <Content Include="Lang\ScadaTableEditor.ru-RU.xml">

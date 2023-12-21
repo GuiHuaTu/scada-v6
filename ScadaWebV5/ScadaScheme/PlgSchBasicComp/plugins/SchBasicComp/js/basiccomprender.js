@@ -39,13 +39,13 @@ scada.scheme.ButtonRenderer.prototype._setState = function (btnComp, boundProper
 
 scada.scheme.ButtonRenderer.prototype.createDom = function (component, renderContext) {
     var props = component.props;
-
+    debugger;
     var btnComp = $("<button id='comp" + component.id + "' class='basic-button'></button>");
     var btnContainer = $("<div class='basic-button-container'><div class='basic-button-content'>" +
         "<div class='basic-button-icon'></div><div class='basic-button-label'></div></div></div>");
 
     this.prepareComponent(btnComp, component);
-    this.setFont(btnComp, props.Font);
+    this.setFont(btnComp, props.Font); 
     this.setForeColor(btnComp, props.ForeColor);
     this.bindAction(btnComp, component, renderContext);
 
@@ -70,6 +70,22 @@ scada.scheme.ButtonRenderer.prototype.createDom = function (component, renderCon
 
     btnComp.append(btnContainer);
     component.dom = btnComp;
+
+    var spanComp = component.dom.first();
+
+    // apply properties on hover
+    var thisRenderer = this;
+
+    spanComp.hover(
+        function () {
+            thisRenderer.setBackColor(spanComp, props.BackColorOnHover);
+            thisRenderer.setBorderColor(spanComp, props.BorderColorOnHover);
+        },
+        function () {
+            thisRenderer.setBackColor(spanComp, props.BackColor, true);
+            thisRenderer.setBorderColor(spanComp, props.BorderColor, true);
+        }
+    );
 };
 
 scada.scheme.ButtonRenderer.prototype.refreshImages = function (component, renderContext, imageNames) {
@@ -92,6 +108,7 @@ scada.scheme.ButtonRenderer.prototype.updateData = function (component, renderCo
         this._setState(btnComp, props.BoundProperty, state);
     }
 };
+
 
 /********** Led Renderer **********/
 

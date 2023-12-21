@@ -65,8 +65,11 @@
   <ItemGroup>
     <Content Include="plugins\SchBasicComp\css\basiccomp.css">
       <DependentUpon>basiccomp.less</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="plugins\SchBasicComp\css\basiccomp.less" />
+    <Content Include="plugins\SchBasicComp\css\basiccomp.less">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="compilerconfig.json" />
     <None Include="compilerconfig.json.defaults">
       <DependentUpon>compilerconfig.json</DependentUpon>
@@ -79,8 +82,11 @@
     <None Include="Properties\PublishProfiles\MainProfile.pubxml" />
     <Content Include="plugins\SchBasicComp\css\basiccomp.min.css">
       <DependentUpon>basiccomp.css</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="plugins\SchBasicComp\js\basiccomprender.js" />
+    <Content Include="plugins\SchBasicComp\js\basiccomprender.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\led.png" />
     <None Include="Resources\toggle.png" />
     <None Include="Resources\button.png" />

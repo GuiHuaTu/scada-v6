@@ -63,6 +63,9 @@ namespace Scada.Web.Plugins.SchBasicComp
         {
             serBinder = PlgUtils.SerializationBinder;
 
+            BackColorOnHover = "";
+            BorderColorOnHover = "";
+            BorderWidth = 3;
             ForeColor = "";
             Font = null;
             ImageName = "";
@@ -75,6 +78,26 @@ namespace Scada.Web.Plugins.SchBasicComp
             Size = DefaultSize;
         }
 
+
+        /// <summary>
+        /// Получить или установить цвет фона при наведении указателя мыши
+        /// </summary>
+        #region Attributes
+        [DisplayName("Back color on hover"), Category(Categories.Behavior)]
+        [Description("The background color of the component when user rests the pointer on it.")]
+        [CM.Editor(typeof(ColorEditor), typeof(UITypeEditor))]
+        #endregion
+        public string BackColorOnHover { get; set; }
+
+        /// <summary>
+        /// Получить или установить цвет рамки при наведении указателя мыши
+        /// </summary>
+        #region Attributes
+        [DisplayName("Border color on hover"), Category(Categories.Behavior)]
+        [Description("The border color of the component when user rests the pointer on it.")]
+        [CM.Editor(typeof(ColorEditor), typeof(UITypeEditor))]
+        #endregion
+        public string BorderColorOnHover { get; set; }
 
         /// <summary>
         /// Получить или установить цвет текста
@@ -172,6 +195,8 @@ namespace Scada.Web.Plugins.SchBasicComp
         {
             base.LoadFromXml(xmlNode);
 
+            BackColorOnHover = xmlNode.GetChildAsString("BackColorOnHover");
+            BorderColorOnHover = xmlNode.GetChildAsString("BorderColorOnHover");
             ForeColor = xmlNode.GetChildAsString("ForeColor");
             Font = Font.GetChildAsFont(xmlNode, "Font");
             ImageName = xmlNode.GetChildAsString("ImageName");
@@ -189,6 +214,9 @@ namespace Scada.Web.Plugins.SchBasicComp
         public override void SaveToXml(XmlElement xmlElem)
         {
             base.SaveToXml(xmlElem);
+
+            xmlElem.AppendElem("BackColorOnHover", BackColorOnHover);
+            xmlElem.AppendElem("BorderColorOnHover", BorderColorOnHover);
 
             xmlElem.AppendElem("ForeColor", ForeColor);
             Font.AppendElem(xmlElem, "Font", Font);

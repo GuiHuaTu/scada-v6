@@ -162,9 +162,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <None Include="Web\css\common\globalvar.less" />
-    <None Include="Web\plugins\SchBasicComp\css\basiccomp.less">
+    <Content Include="Web\plugins\SchBasicComp\css\basiccomp.less">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="Web\plugins\SchemeEditor\css\editor.less">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -253,20 +253,20 @@
     <Content Include="Web\js\api\checkbrowser.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Web\plugins\SchBasicComp\css\basiccomp.css">
+    <Content Include="Web\plugins\SchBasicComp\css\basiccomp.css">
+      <DependentUpon>basiccomp.less</DependentUpon>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Web\plugins\SchBasicComp\css\basiccomp.min.css">
+    </Content>
+    <Content Include="Web\plugins\SchBasicComp\css\basiccomp.min.css">
+      <DependentUpon>basiccomp.css</DependentUpon>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
     <Content Include="Web\plugins\SchBasicComp\js\basiccomprender.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Web\plugins\SchBasicComp\lang\PlgSchBasicComp.en-GB.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Web\plugins\SchBasicComp\lang\PlgSchBasicComp.en-GB.xml" />
     <Content Include="Web\plugins\SchBasicComp\lang\PlgSchBasicComp.ru-RU.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Web\plugins\SchemeEditor\css\editor.css">
       <DependentUpon>editor.less</DependentUpon>
