@@ -214,7 +214,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                         Log.WriteLine($"--------- SiemenssS7 SetTagData 3");
                         deviceTag.DataType = TagDataType.Double;
                         deviceTag.Format = TagFormat.FloatNumber;
-                        DeviceData.Set(deviceTag.Index, Convert.ToDouble(val), stat); 
+                        DeviceData.Set(deviceTag.Code, Convert.ToDouble(val), stat); 
                     }
 
                 }
@@ -535,21 +535,21 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
             if ((deviceModel.GetCmd(cmd.CmdCode) ?? deviceModel.GetCmd(cmd.CmdNum)) is SiemensS7Cmd siemensS7Cmd)
             {
-                // prepare SiemensS7 command
-                if (siemensS7Cmd.Multiple )
-                {
-                    siemensS7Cmd.Value = 0;
+                //// prepare SiemensS7 command
+                //if (siemensS7Cmd.Multiple )
+                //{
+                //    siemensS7Cmd.Value = 0;
 
-                    if (cmd.CmdData != null && cmd.CmdData.Length > 0)
-                        siemensS7Cmd.Data = cmd.CmdData;
-                    else
-                        siemensS7Cmd.SetCmdData(cmd.CmdVal);
-                }
-                else
-                {
-                    siemensS7Cmd.Value =  (ushort)cmd.CmdVal;
-                    siemensS7Cmd.SetCmdData(cmd.CmdVal);
-                } 
+                //    if (cmd.CmdData != null && cmd.CmdData.Length > 0)
+                //        siemensS7Cmd.Data = cmd.CmdData;
+                //    else
+                //        siemensS7Cmd.SetCmdData(cmd.CmdVal);
+                //}
+                //else
+                //{
+                //    siemensS7Cmd.Value =  (ushort)cmd.CmdVal;
+                //    siemensS7Cmd.SetCmdData(cmd.CmdVal);
+                //} 
 
                 // send command to device
                 LastRequestOK = false;
@@ -581,10 +581,10 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                             itemVal = cmdVal;
                         }
                     else
-                        itemVal = cmdVal;
+                        itemVal = siemensS7Cmd.GetValue(cmdVal);
 
                     Log.WriteLine($"--------- SiemenssS7 SendCommand :Address={siemensS7Cmd.Address} ElemType={siemensS7Cmd.ElemType} " +
-                        $"cmdData={cmdData} cmdVal={cmdVal}  itemVal={itemVal} ");
+                        $"cmdData={cmdData} cmdVal={cmdVal}  itemVal={itemVal} valType={itemVal.GetType()}");
 
                     if (lineData.ClientHelper.SetValueV2(siemensS7Cmd, itemVal))
                         LastRequestOK = true;

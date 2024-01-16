@@ -269,5 +269,43 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
             if (reverse)
                 Array.Reverse(Data);
         }
+
+        public object GetValue(double cmdVal)
+        {
+            object value = null;
+            switch (ElemType)
+            {
+                case ElemType.UShort:
+                    value = (ushort)cmdVal;
+                    break;
+                case ElemType.Short:
+                    value = (short)cmdVal;
+                    break;
+                case ElemType.UInt:
+                    value = (uint)cmdVal;
+                    break;
+                case ElemType.Int:
+                    value = (int)cmdVal;
+                    break;
+                case ElemType.ULong:
+                    value = (ulong)cmdVal;
+                    break;
+                case ElemType.Long:
+                    value = (long)cmdVal;
+                    break;
+                case ElemType.Float:
+                    value = (float)cmdVal;
+                    break;
+                case ElemType.Double:
+                    value = cmdVal;
+                    break;
+                default:
+                    value = cmdVal; 
+                    break;
+            }
+
+          return value;
+        }
+
     }
 }
