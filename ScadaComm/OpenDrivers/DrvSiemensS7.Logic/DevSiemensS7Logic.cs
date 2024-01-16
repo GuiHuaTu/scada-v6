@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 {
@@ -171,7 +172,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
              //Log.WriteLine($"--------- SiemenssS7 SetTagData ");
             int tagStatus = LastRequestOK ? CnlStatusID.Defined : CnlStatusID.Undefined;
 
-             //Log.WriteLine($"--------- SiemenssS7 SetTagData Status={tagStatus}");
+             Log.WriteLine($"--------- SiemenssS7 SetTagData Status={tagStatus}");
 
             //Log.WriteLine($"--------- SiemenssS7 SetTagData  elemGroup.Elems.Count={elemGroup.Elems.Count}  elemGroup.ElemData={elemGroup.ElemData.Count}");
             for(int i = 0;i < elemGroup.Elems.Count;i++)
@@ -179,14 +180,44 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                 DeviceTag deviceTag = elemGroup.Elems[i].DeviceTag; 
                 ElemType elemType = elemGroup.Elems[i].ElemType;
                 object val = elemGroup.ElemData[i];
-       
-                if (deviceTag.Aux is DeviceTagMeta tagMeta && val != null)
-                    tagMeta.ActualDataType = val.GetType();
+                int stat = elemGroup.CnlStatusID[i];
 
-                //Log.WriteLine($"--------- SiemenssS7 SetTagData val={val}");
+                Log.WriteLine($"--------- SiemenssS7 SetTagData deviceTag index={deviceTag.Index} Code={deviceTag.Code}");
+                Log.WriteLine($"--------- SiemenssS7 SetTagData CnlStatusID={stat} | val={val}");
+                Log.WriteLine($"--------- SiemenssS7 SetTagData");
 
-                DeviceData.Set(deviceTag.Code, Convert.ToDouble(val), tagStatus);
+                if (stat == CnlStatusID.Error)
+                {
+                    DeviceData.Invalidate(deviceTag.Index);
+                }
+                else
+                {
+                    if (deviceTag.Aux is DeviceTagMeta tagMeta && val != null)
+                        tagMeta.ActualDataType = val.GetType();
 
+                    if (val is string strVal)
+                    {
+                        Log.WriteLine($"--------- SiemenssS7 SetTagData 1");
+                        deviceTag.DataType = TagDataType.Unicode;
+                        deviceTag.Format = TagFormat.String;
+                        DeviceData.SetUnicode(deviceTag.Index, strVal, stat);
+                    }
+                    else if (val is DateTime dtVal)
+                    {
+                        Log.WriteLine($"--------- SiemenssS7 SetTagData 2");
+                        deviceTag.DataType = TagDataType.Double;
+                        deviceTag.Format = TagFormat.DateTime;
+                        DeviceData.SetDateTime(deviceTag.Index, dtVal, stat);
+                    }
+                    else
+                    {
+                        Log.WriteLine($"--------- SiemenssS7 SetTagData 3");
+                        deviceTag.DataType = TagDataType.Double;
+                        deviceTag.Format = TagFormat.FloatNumber;
+                        DeviceData.Set(deviceTag.Index, Convert.ToDouble(val), stat); 
+                    }
+
+                }
             }
 
 
@@ -386,13 +417,37 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                     //Log.WriteLine($"--------- SiemenssS7 tagGroup.AddTag：{elemConfig.TagCode} {elemConfig.Name}  ");
                     //deviceTag = tagGroup.AddTag(elemConfig.TagCode, elemConfig.Name);
                     deviceTag = elemConfig.ToDeviceTag();
-                    tagGroup.DeviceTags.Add(deviceTag);
 
                     deviceTag.SetFormat(GetTagFormat(elemConfig));
                     if (elemConfig.ElemType == ElemType.String)
                     {
                         deviceTag.DataType = TagDataType.Unicode;
                         deviceTag.Format = TagFormat.String;
+                        deviceTag.DataLen = DeviceTag.CalcDataLength(1, TagDataType.Unicode);
+                    }
+                    if (elemConfig.ElemType == ElemType.Float || elemConfig.ElemType == ElemType.Double)
+                    {
+                        deviceTag.DataType = TagDataType.Double;
+                        deviceTag.Format = TagFormat.FloatNumber;
+                        deviceTag.DataLen = DeviceTag.CalcDataLength(1, TagDataType.Unicode);
+                    }
+                    if (elemConfig.ElemType == ElemType.Int 
+                         || elemConfig.ElemType == ElemType.UInt
+                         || elemConfig.ElemType == ElemType.Short
+                         || elemConfig.ElemType == ElemType.UShort
+                         || elemConfig.ElemType == ElemType.Long
+                         || elemConfig.ElemType == ElemType.ULong
+                         )
+                    {
+                        deviceTag.DataType = TagDataType.Int64;
+                        deviceTag.Format = TagFormat.IntNumber;
+                        deviceTag.DataLen = DeviceTag.CalcDataLength(1, TagDataType.Unicode);
+                    }
+                    else
+                    {  
+                        deviceTag.DataType = TagDataType.Unicode;
+                        deviceTag.Format = TagFormat.String;
+                        deviceTag.DataLen = DeviceTag.CalcDataLength(1, TagDataType.Unicode);
                     }
 
                     // add model element
@@ -403,7 +458,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                         elem.Address = elemConfig.Address;
                         elem.ElemType = elemConfig.ElemType;
 
-                        deviceTag.DataLen = elem.DataLength;
+                        //deviceTag.DataLen = elem.DataLength;
 
                         elem.DeviceTag = deviceTag;
 
@@ -412,8 +467,11 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
                         elemGroup.Elems.Add(elem);
                         elemGroup.ElemData.Add(new object());
+                        elemGroup.CnlStatusID.Add(0);
 
                     }
+
+                    tagGroup.DeviceTags.Add(deviceTag);
 
                     // add model command
                     if (groupCommands && !elemConfig.ReadOnly && !string.IsNullOrEmpty(elemConfig.TagCode))
@@ -528,7 +586,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                     Log.WriteLine($"--------- SiemenssS7 SendCommand :Address={siemensS7Cmd.Address} ElemType={siemensS7Cmd.ElemType} " +
                         $"cmdData={cmdData} cmdVal={cmdVal}  itemVal={itemVal} ");
 
-                    if (lineData.ClientHelper.SetValue(siemensS7Cmd, itemVal))
+                    if (lineData.ClientHelper.SetValueV2(siemensS7Cmd, itemVal))
                         LastRequestOK = true;
 
                     FinishRequest();
@@ -635,6 +693,11 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
 
                             SetTagData(elemGroup);
                         }
+                        else //组里某个点位报错，其他点位值也正常显示，继续采集其他不影响其他组，
+                        {
+                            LastRequestOK = true; //继续采集其他不影响其他组
+                            SetTagData(elemGroup);
+                        }
                         //foreach (var elem in elemGroup.Elems )
                         //{ 
                         //    Object val =  lineData.ClientHelper.ReadValue(elem);
@@ -654,7 +717,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                         FinishRequest();
                         tryNum++;
 
-                        if (tryNum > ReqRetries)//组里某个点位报错，本组TryNum轮循后跳出while
+                        if (tryNum >= ReqRetries)//组里某个点位报错，本组尝试多次采集轮循后跳出while,继续下一组采集
                         {
                             LastRequestOK = true;
                         }
@@ -665,16 +728,16 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Logic
                         // next element group
                         elemGroupIdx++;
                     }
-                    else if (tryNum > 0)
-                    {
-                        // set tag data as undefined for the current and the next element groups
-                        while (elemGroupIdx < elemGroupCnt)
-                        {
-                            elemGroup = deviceModel.ElemGroups[elemGroupIdx];
-                            DeviceData.Invalidate(elemGroup.StartTagIdx, elemGroup.Elems.Count);
-                            elemGroupIdx++;
-                        }
-                    }
+                    //else if (tryNum > 0)
+                    //{
+                    //    // set tag data as undefined for the current and the next element groups
+                    //    while (elemGroupIdx < elemGroupCnt)
+                    //    {
+                    //        elemGroup = deviceModel.ElemGroups[elemGroupIdx];
+                    //        DeviceData.Invalidate(elemGroup.StartTagIdx, elemGroup.Elems.Count);
+                    //        elemGroupIdx++;
+                    //    }
+                    //}
                     #endregion
                 }
 

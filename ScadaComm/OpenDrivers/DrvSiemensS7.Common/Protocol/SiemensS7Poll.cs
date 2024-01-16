@@ -5,18 +5,20 @@ using Scada.Comm.Channels;
 using Scada.Log;
 using System.Globalization;
 using S7.Net;
+using S7.Net.Types;
 using System.Net;
 using System;
 using Scada.Data.Entities;
 using Scada.Lang;
 using System.Xml.Linq;
-using System.Text;
-using S7.Net.Types;
+using System.Text; 
 using Scada.Comm.Drivers.DrvSiemensS7.Config;
 using Scada.Storages;
+using Scada.Data.Const;
 
 namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
 {
+ 
     /// <summary>
     /// Polls devices using SiemensS7 protocol.
     /// <para>Опрос устройств по протоколу SiemensS7.</para>
@@ -58,24 +60,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
             //ChooseRequestMethod();
             ReadDoRequest = Read;
         }
-        /// <summary>
-        /// Initializes a new instance of the class.
-        /// </summary>
-        public SiemensS7Poll(string cpuType, string ip, short rack, short slot)
-        {
-            SiemensS7Session = null;
-            log = LogStub.Instance;
 
-            CpuType = cpuType;
-            PlcIP = ip;
-            PlcRack = rack;
-            PlcSlot = slot;
-
-            Timeout = 0;
-            TransactionID = 0;
-            //ChooseRequestMethod();
-            ReadDoRequest = Read; 
-        }
 
         public void Connection()
         {
@@ -191,7 +176,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                     try
                     {
                         //log.WriteLine("");
-                        string val = ReadValue(elemGroup.Elems[i]).ToString();
+                        //string val = ReadValue(elemGroup.Elems[i]).ToString();
+                        object val = ReadValueV2(elemGroup.Elems[i]) ;
 
                         //log.WriteLine($"--------- SiemenssS7 ReadValue:ElemName={elemGroup.Elems[i].Name} Address={elemGroup.Elems[i].Address}" +
                         //    $" ElemType={elemGroup.Elems[i].ElemType} ReadValue={val}");
@@ -200,11 +186,15 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
 
                         elemGroup.ElemData[i] = val;
 
+                        elemGroup.CnlStatusID[i] = CnlStatusID.Defined;
+
                         okCount = okCount + 1;
                     }
                     catch (Exception ex)
                     {
-                        log.WriteLine("Error: " + ex.Message);
+                        elemGroup.CnlStatusID[i] = CnlStatusID.Error;
+
+                        log.WriteLine($"点位信息:{elemGroup.Elems[i].Name}|{elemGroup.Elems[i].ElemType.ToString()}|{elemGroup.Elems[i].Address}，采集失败Error: " + ex.Message);
                     }
                 }
 
@@ -273,10 +263,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                     case VarType.S7WString:
                         short S7WStringCount = ((short)SiemensS7Session.Read(plcData.DataType, plcData.DbNumber, plcData.StartByte + 2, VarType.Int, 1));
                         return SiemensS7Session.Read(plcData.DataType, plcData.DbNumber, plcData.StartByte, VarType.S7WString, S7WStringCount);
-                        break;
-                    case VarType.S5Time:
-                        return SiemensS7Session.Read(plcData.DataType, plcData.DbNumber, plcData.StartByte, VarType.S5Time, 1);
-                        break;
+                        break; 
                     case VarType.Counter:
                         break;
                     case VarType.DateTime:
@@ -297,6 +284,65 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
             }
 
         }
+
+
+
+        public object ReadValueV2(Elem elem)
+        {
+
+            if (SiemensS7Session != null && SiemensS7Session.IsConnected)
+            {
+
+                var DataItem = new PLCAddress(elem.Address);
+         
+                #region ElemType
+                switch (elem.ElemType)
+                {
+                    case ElemType.Bool:
+                        return (bool)SiemensS7Session.Read(elem.Address);
+                    case ElemType.Byte:
+                        return (byte)SiemensS7Session.Read(elem.Address);
+                    case ElemType.UShort:
+                        return (ushort)SiemensS7Session.Read(elem.Address);
+                    case ElemType.Short:
+                        return ((ushort)SiemensS7Session.Read(elem.Address)).ConvertToShort();
+                    case ElemType.UInt:
+                        return (uint)SiemensS7Session.Read(elem.Address);
+                    case ElemType.Int:
+                        return ((uint)SiemensS7Session.Read(elem.Address)).ConvertToInt();
+                    case ElemType.ULong:
+                        return Convert.ToUInt64(SiemensS7Session.Read(elem.Address));
+                    case ElemType.Long:
+                        return Convert.ToInt64(SiemensS7Session.Read(elem.Address));
+                    case ElemType.Float:
+                        return ((uint)SiemensS7Session.Read(elem.Address)).ConvertToFloat();
+                    case ElemType.Double:
+                        return (SiemensS7Session.Read(elem.Address));
+                    case ElemType.String:
+                        StringClass tc2Generic = SiemensS7Session.ReadClass<StringClass>(DataItem.DbNumber);
+                        return tc2Generic.StringVariable;
+                    case ElemType.DateTime:
+                        //var DataType = elem.DataItem.DataType;
+                        //var db = elem.DataItem.DB;
+                        //var offset = elem.DataItem.StartByteAdr;
+                        var DataType = DataItem.DataType;
+                        var db = DataItem.DbNumber;
+                        var offset = DataItem.StartByte;
+                        var value = SiemensS7Session.Read( DataType, db, offset, VarType.DateTimeLong, 1);
+                        return (System.DateTime)value;
+                    default:
+                        throw new Exception("读取数据类型不存在");
+                }
+                #endregion
+
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+
 
 
         public bool SetValue(SiemensS7Cmd siemensS7Cmd, object value)
@@ -366,11 +412,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                                 wsstringArr[4 + i] = wsOstringArr[i];
                             }
                             SiemensS7Session.Write(plcData.DataType, plcData.DbNumber, plcData.StartByte, wsstringArr);
-                            break;
-                        case VarType.S5Time:
-                            short time = Convert.ToInt16(value);
-                            SiemensS7Session.Write(plcData.DataType, plcData.DbNumber, plcData.StartByte, time);
-                            break;
+                            break; 
                         //case VarType.Counter:
                         //    break;
                         //case VarType.DateTime:
@@ -394,6 +436,83 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
             }
 
         }
+
+
+
+        public bool SetValueV2(SiemensS7Cmd elem, object value)
+        {
+            try
+            {
+                if (SiemensS7Session != null && SiemensS7Session.IsConnected)
+                {
+                    var DataItem = new PLCAddress(elem.Address);
+                
+                    #region ElemType
+                    switch (elem.ElemType)
+                    {
+                        case ElemType.Bool:
+                            SiemensS7Session.Write(elem.Address, value);
+                            break;
+                        case ElemType.Byte:
+                            SiemensS7Session.Write(elem.Address, value);
+                            break;
+                        case ElemType.UShort:
+                            SiemensS7Session.Write(elem.Address, (ushort)value);
+                            break;
+                        case ElemType.Short:
+                            SiemensS7Session.Write(elem.Address, ((short)value).ConvertToUshort());
+                            break;
+                        case ElemType.UInt:
+                            SiemensS7Session.Write(elem.Address, (uint)value);
+                            break;
+                        case ElemType.Int:
+                            SiemensS7Session.Write(elem.Address, (int)value);
+                            break;
+                        case ElemType.ULong:
+                            SiemensS7Session.Write(elem.Address, ((ulong)value));
+                            break;
+                        case ElemType.Long:
+                            SiemensS7Session.Write(elem.Address, ((long)value));
+                            break;
+                        case ElemType.Float:
+                            SiemensS7Session.Write(elem.Address, ((float)value).ConvertToUInt());
+                            break;
+                        case ElemType.Double:
+                            SiemensS7Session.Write(elem.Address, (double)value);
+                            break;
+                        case ElemType.String:
+                            StringClass str = new StringClass();
+                            str.StringVariable = (string)value;
+                            SiemensS7Session.WriteClass(str, DataItem.DbNumber);
+                            break;
+                        case ElemType.DateTime:
+                            //var DataType = elem.DataItem.DataType;
+                            //var db = elem.DataItem.DB;
+                            //var offset = elem.DataItem.StartByteAdr;
+                            var DataType = DataItem.DataType;
+                            var db = DataItem.DbNumber;
+                            var offset = DataItem.StartByte;
+                            SiemensS7Session.WriteBytes(DataType, db, offset, S7.Net.Types.DateTimeLong.ToByteArray((System.DateTime)value));
+                            break;
+                        default:
+                            throw new Exception("写入数据类型不存在");
+                    }
+                    #endregion
+                }
+
+                log.WriteLine("OK");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.WriteLine("Error: " + ex.Message);
+                return false;
+            }
+
+        }
+
+
+
         //rapid scada  elemType  change to S7.net VarType
         public VarType GetS7VarTypeByElemType(ElemType elemType)
         {
@@ -436,10 +555,7 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
                     break;
                 case ElemType.S7WString://4 byte
                     return VarType.S7WString;
-                    break;
-                case ElemType.S5Time:
-                    return VarType.S5Time;
-                    break;
+                    break; 
                 case ElemType.Counter:
                     return VarType.Counter;
                     break;

@@ -13,10 +13,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DrvSiemensS7.Common\DrvSiemensS7.Common.csproj" />
-    <ProjectReference Include="..\s7netplus\S7.Net\S7.Net.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="S7.Net">
+      <HintPath>..\DrvSiemensS7.Common\S7.Net.dll</HintPath>
+    </Reference>
     <Reference Include="ScadaCommCommon">
       <HintPath>..\..\ScadaComm\ScadaCommCommon\bin\Release\netstandard2.0\ScadaCommCommon.dll</HintPath>
     </Reference>

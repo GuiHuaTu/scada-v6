@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Rapid Software LLC. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using Scada.Data.Const;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,7 +28,8 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
             DataBlock = dataBlock;
             reqDescr = "";
             Elems = new List<Elem>();
-            ElemData = new List<object>();  
+            ElemData = new List<object>();
+            CnlStatusID = new List<int>();
             StartTagIdx = -1; 
         }
 
@@ -65,7 +67,12 @@ namespace Scada.Comm.Drivers.DrvSiemensS7.Protocol
         //public byte[][] ElemData { get; private set; } 
 
         public List<object> ElemData { get; private set; }
-
+ 
+        /// <summary>
+        /// 每个点位读取状态
+        /// </summary>
+        public List<int> CnlStatusID { get; private set; }
+        
         /// <summary>
         /// Gets or sets the device tag index that corresponds to the start element.
         /// </summary>

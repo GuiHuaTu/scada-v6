@@ -13,10 +13,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\s7netplus\S7.Net\S7.Net.csproj" />
+    <None Remove="S7.Net.dll" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="S7.Net.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="S7.Net">
+      <HintPath>S7.Net.dll</HintPath>
+    </Reference>
     <Reference Include="ScadaCommCommon">
       <HintPath>..\..\ScadaComm\ScadaCommCommon\bin\Release\netstandard2.0\ScadaCommCommon.dll</HintPath>
     </Reference>
