@@ -17,6 +17,7 @@ using Scada.Data.Tables;
 using Scada.Lang;
 using Scada.Protocol;
 using System.Globalization;
+using System.Net.NetworkInformation;
 using System.Text;
 
 namespace Scada.Comm.Drivers.DrvMqttPublisher.Logic
@@ -164,8 +165,11 @@ namespace Scada.Comm.Drivers.DrvMqttPublisher.Logic
                 {
                     if (deviceSlice.DeviceTags[i].Aux is ItemConfig itemConfig)
                     {
-                        MqttApplicationMessage message = CreateMessage(itemConfig, deviceSlice.CnlData[i],
+                        //MqttApplicationMessage message = CreateMessage(itemConfig, deviceSlice.CnlData[i],
+                        //    out string payloadStr);
+                        MqttApplicationMessage message = CreateMessageTagInfo(itemConfig, deviceSlice.DeviceTags[i], deviceSlice.CnlData[i],
                             out string payloadStr);
+                        
                         Log.WriteLine("{0} {1} = {2}", CommPhrases.SendNotation, itemConfig.Topic, payloadStr);
                         MqttClientPublishResult result = mqttClientChannel.Publish(message);
 
@@ -265,6 +269,41 @@ namespace Scada.Comm.Drivers.DrvMqttPublisher.Logic
             message.Payload = Encoding.UTF8.GetBytes(payloadStr);
             return message;
         }
+        /// <summary>
+        /// Creates a message to publish channel data.
+        /// </summary>
+        private MqttApplicationMessage CreateMessageTagInfo(ItemConfig itemConfig, DeviceTag deviceTag, CnlData cnlData, out string payloadStr)
+        {
+            MqttApplicationMessage message = new()
+            {
+                Topic = config.DeviceOptions.RootTopic + itemConfig.Topic,
+                QualityOfServiceLevel = (MqttQualityOfServiceLevel)itemConfig.QosLevel,
+                Retain = itemConfig.Retain
+            };
+
+            if (string.IsNullOrEmpty(config.DeviceOptions.PublishFormat))
+            {
+                payloadStr = cnlData.IsUndefined
+                    ? config.DeviceOptions.UndefinedValue
+                    : cnlData.Val.ToString(NumberFormatInfo.InvariantInfo);
+            }
+            else
+            {
+                string valStr = cnlData.Val.ToString(NumberFormatInfo.InvariantInfo);
+                payloadStr = config.DeviceOptions.PublishFormat
+                    .Replace("@Name", deviceTag.Name.ToString(), StringComparison.Ordinal)
+                    .Replace("@Code", deviceTag.Code.ToString(), StringComparison.Ordinal)
+                    .Replace("@CnlNum", deviceTag.Cnl.CnlNum.ToString(), StringComparison.Ordinal)
+                    .Replace("@TagNum", deviceTag.TagNum.ToString(), StringComparison.Ordinal)
+                    .Replace(MessageVar.Value, cnlData.Val.ToString(), StringComparison.Ordinal)
+                    .Replace(MessageVar.Status, cnlData.Stat.ToString(), StringComparison.Ordinal); ;
+            }
+
+            message.Payload = Encoding.UTF8.GetBytes(payloadStr);
+            return message;
+        }
+
+ 
 
         /// <summary>
         /// Handles the received message.
