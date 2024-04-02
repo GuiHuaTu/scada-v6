@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2023 Rapid Software LLC
+ * Copyright 2024 Rapid Software LLC
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
  * 
  * Author   : Mikhail Shiryaev
  * Created  : 2021
- * Modified : 2021
+ * Modified : 2024
  */
 
 using Scada.Lang;
@@ -71,7 +71,7 @@ namespace Scada.Web.Code
                         if (string.IsNullOrEmpty(statsID))
                         {
                             DateTime utcNow = DateTime.UtcNow;
-                            statsID = WebUtils.AppVersion + "-" + utcNow.ToString("yyyyMMdd") + "-" +
+                            statsID = AppUtils.AppVersion + "-" + utcNow.ToString("yyyyMMdd") + "-" +
                                 ScadaUtils.GenerateUniqueID(utcNow);
                             storage.WriteText(DataCategory.Storage, StatsIdFileName, statsID);
                         }

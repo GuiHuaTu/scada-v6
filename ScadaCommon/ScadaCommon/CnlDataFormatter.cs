@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2023 Rapid Software LLC
+ * Copyright 2024 Rapid Software LLC
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
  * 
  * Author   : Mikhail Shiryaev
  * Created  : 2016
- * Modified : 2023
+ * Modified : 2024
  */
 
 using Scada.Data.Const;
@@ -383,7 +383,7 @@ namespace Scada
                 sbDescr.Append(CommonPhrases.CommandDescrPrefix);
                 bool showValue = ev.CnlStat > CnlStatusID.Undefined;
                 dataFormatted = FormatCnlData(new CnlData(ev.CnlVal, CnlStatusID.Defined),
-                    DataTypeID.Double, cnl?.FormatID ?? 0, cnl?.UnitID ?? 0);
+                    DataTypeID.Double, cnl?.OutFormatID ?? cnl?.FormatID ?? 0, cnl?.UnitID ?? 0);
 
                 if (showValue)
                     sbDescr.Append(dataFormatted.DispVal);
