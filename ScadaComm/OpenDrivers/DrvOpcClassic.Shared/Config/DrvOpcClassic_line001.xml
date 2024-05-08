@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<OpcLineConfig>
+  <ConnectionOptions>
+    <Host />
+    <ServerPath>Matrikon.OPC.Simulation/{f8582cf2-88fb-11d0-b850-00c0f0104305}</ServerPath>
+    <DaSpec>DA30</DaSpec>
+    <AeSpec>AE10</AeSpec>
+    <Username />
+    <Password />
+    <Domain />
+    <ProxyAddress />
+  </ConnectionOptions>
+</OpcLineConfig>

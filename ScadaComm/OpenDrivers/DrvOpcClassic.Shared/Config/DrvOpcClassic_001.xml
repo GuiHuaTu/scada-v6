@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<OpcDeviceConfig>
+  <Subscriptions>
+    <Subscription active="true" displayName="Demo Subscription" updateRate="1000" keepAlive="0" deadband="0" readSync="false">
+      <Item active="true" path="" name="Saw-toothed Waves.Real8" tagCode="Saw-toothed Waves.Real8" dataType="System.Double" isArray="false" />
+      <Item active="true" path="" name="Triangle Waves.Real4" tagCode="Triangle Waves.Real4" dataType="System.Single" isArray="false" />
+      <Item active="true" path="" name="Triangle Waves.Int2" tagCode="Triangle Waves.Int2" dataType="System.Int16" isArray="false" />
+    </Subscription>
+  </Subscriptions>
+  <Commands>
+    <Command path="" name="Bucket Brigade.Real8" cmdNum="0" cmdCode="Bucket Brigade.Real8" dataType="System.Double" />
+  </Commands>
+  <EventSubscriptions>
+    <Subscription active="true" displayName="Event Subscription" updateRate="1000" keepAlive="0" maxSize="0" simpleEvents="true" trackingEvents="true" conditionEvents="true" highSeverity="1000" lowSeverity="1">
+      <Category name="Simulated Event" id="1" />
+      <Category name="Simulated Item Creation Event" id="2" />
+    </Subscription>
+  </EventSubscriptions>
+</OpcDeviceConfig>

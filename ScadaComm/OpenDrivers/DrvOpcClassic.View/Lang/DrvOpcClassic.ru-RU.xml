@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<DrvOpcClassicDictionaries>
+  <Dictionary key="Scada.Comm.Drivers.DrvOpcClassic.View.Controls.CtrlCommand">
+    <Phrase key="gbCommand">Параметры команды</Phrase>
+    <Phrase key="lblPath">Путь</Phrase>
+    <Phrase key="lblName">Наименование</Phrase>
+    <Phrase key="lblCmdCode">Код команды</Phrase>
+    <Phrase key="lblCmdNum">Номер команды</Phrase>
+    <Phrase key="lblDataType">Тип данных</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Comm.Drivers.DrvOpcClassic.View.Controls.CtrlEmptyItem">
+    <Phrase key="gbEmptyItem">Параметры элемента</Phrase>
+    <Phrase key="lblNotSelected">Элемент не выбран</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Comm.Drivers.DrvOpcClassic.View.Controls.CtrlEventCategory">
+    <Phrase key="gbEventCategory">Параметры категории</Phrase>
+    <Phrase key="lblName">Наименование</Phrase>
+    <Phrase key="lblID">Идентификатор</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Comm.Drivers.DrvOpcClassic.View.Controls.CtrlEventSubscription">
+    <Phrase key="gbSubscription">Параметры подписки</Phrase>
+    <Phrase key="chkActive">Активна</Phrase>
+    <Phrase key="lblDisplayName">Наименование</Phrase>
+    <Phrase key="lblUpdateRate">Частота обновления, мс</Phrase>
+    <Phrase key="lblKeepAlive">Поддерживать, мс</Phrase>
+    <Phrase key="lblMaxSize">Макс. размер</Phrase>
+    <Phrase key="chkSimpleEvents">Простые события</Phrase>
+    <Phrase key="chkTrackingEvents">События отслеживания</Phrase>
+    <Phrase key="chkConditionEvents">События состояния</Phrase>
+    <Phrase key="lblHighSeverity">Макс. серьёзность</Phrase>
+    <Phrase key="lblLowSeverity">Мин. серьёзность</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Comm.Drivers.DrvOpcClassic.View.Controls.CtrlItem">
+    <Phrase key="gbItem">Параметры элемента</Phrase>
+    <Phrase key="chkActive">Активен</Phrase>
+    <Phrase key="lblPath">Путь</Phrase>
+    <Phrase key="lblName">Наименование</Phrase>
+    <Phrase key="lblTagCode">Код тега</Phrase>
+    <Phrase key="lblTagNum">Номер тега</Phrase>
+    <Phrase key="lblDataType">Тип данных</Phrase>
+    <Phrase key="chkIsString">Строка</Phrase>
+    <Phrase key="chkIsArray">Массив</Phrase>
+    <Phrase key="lblDataLen">Длина строки или массива</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Comm.Drivers.DrvOpcClassic.View.Controls.CtrlSubscription">
+    <Phrase key="gbSubscription">Параметры подписки</Phrase>
+    <Phrase key="chkActive">Активна</Phrase>
+    <Phrase key="lblDisplayName">Наименование</Phrase>
+    <Phrase key="lblUpdateRate">Частота обновления, мс</Phrase>
+    <Phrase key="lblKeepAlive">Поддерживать, мс</Phrase>
+    <Phrase key="lblDeadband">Мёртвая зона, %</Phrase>
+    <Phrase key="chkReadSync">Читать синхронно</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Comm.Drivers.DrvOpcClassic.View.Forms.FrmDeviceConfig">
+    <Phrase key="this">Свойства устройства {0} - OPC Classic</Phrase>
+    <Phrase key="gbConnectionOptions">Параметры соединения</Phrase>
+    <Phrase key="lblHost">Удалённый хост</Phrase>
+    <Phrase key="btnShowNetworkOptions">Параметры</Phrase>
+    <Phrase key="lblServerPath">OPC-сервер</Phrase>
+    <Phrase key="lblDaSpec">Спецификация DA</Phrase>
+    <Phrase key="lblAeSpec">Спецификация AE</Phrase>
+    <Phrase key="btnSelectServer">Выбрать...</Phrase>
+    <Phrase key="lblConnectionInfo">Параметры соединения общие для линии связи.</Phrase>
+    <Phrase key="gbServerBrowse">Обзор сервера</Phrase>
+    <Phrase key="btnConnect.ToolTip">Соединиться</Phrase>
+    <Phrase key="btnDisconnect.ToolTip">Разъединиться</Phrase>
+    <Phrase key="btnOpenFile.ToolTip">Открыть файл</Phrase>
+    <Phrase key="gbDevice">Конфигурация устройства</Phrase>
+    <Phrase key="btnAddSubscription.ToolTip">Добавить подписку</Phrase>
+    <Phrase key="btnAddItem.ToolTip">Добавить выбранный элемент</Phrase>
+    <Phrase key="btnMoveUpItem.ToolTip">Переместить вверх</Phrase>
+    <Phrase key="btnMoveDownItem.ToolTip">Переместить вниз</Phrase>
+    <Phrase key="btnDeleteItem.ToolTip">Удалить</Phrase>
+    <Phrase key="btnSave">Сохранить</Phrase>
+    <Phrase key="btnClose">Закрыть</Phrase>
+    <Phrase key="XmlFileFilter">XML-файлы (*.xml)|*.xml|Все файлы (*.*)|*.*</Phrase>
+    <Phrase key="ServerNotSelected">OPC-сервер не выбран.</Phrase>
+    <Phrase key="DaServerUnavailable">OPC DA сервер недоступен или не поддерживает выбранную спецификацию.</Phrase>
+    <Phrase key="AeServerUnavailable">OPC AE сервер недоступен или не поддерживает выбранную спецификацию.</Phrase>
+    <Phrase key="ConnectDaServerError">Ошибка при соединении с OPC DA сервером</Phrase>
+    <Phrase key="ConnectAeServerError">Ошибка при соединении с OPC AE сервером</Phrase>
+    <Phrase key="DisconnectDaServerError">Ошибка при отключении от OPC DA сервера</Phrase>
+    <Phrase key="DisconnectAeServerError">Ошибка при отключении от OPC AE сервера</Phrase>
+    <Phrase key="BrowseServerError">Ошибка при обзоре OPC-сервера</Phrase>
+    <Phrase key="LoadServerContentError">Ошибка при загрузке содержимого OPC-сервера</Phrase>
+    <Phrase key="ServerNotConnected">OPC-сервер не подключен.</Phrase>
+    <Phrase key="UnableToReadData">Не удалось прочитать данные.</Phrase>
+    <Phrase key="GetDataTypeError">Ошибка при получении типа данных</Phrase>
+    <Phrase key="DaServerNode">OPC DA</Phrase>
+    <Phrase key="AeServerNode">OPC AE</Phrase>
+    <Phrase key="EmptyNode">Пусто</Phrase>
+    <Phrase key="SubscriptionsNode">Подписки</Phrase>
+    <Phrase key="CommandsNode">Команды</Phrase>
+    <Phrase key="EventSubscriptionsNode">Подписки на события</Phrase>
+    <Phrase key="UnnamedSubscription">&lt;Безымянная подписка&gt;</Phrase>
+    <Phrase key="UnnamedItem">&lt;Безымянный элемент&gt;</Phrase>
+    <Phrase key="UnnamedCommand">&lt;Безымянная команда&gt;</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Comm.Drivers.DrvOpcClassic.View.Forms.FrmNetworkOptions">
+    <Phrase key="this">Сетевые параметры</Phrase>
+    <Phrase key="chkIsDefault">Использовать параметры по умолчанию</Phrase>
+    <Phrase key="gbCredentials">Учётные данные</Phrase>
+    <Phrase key="lblUsername">Имя пользователя</Phrase>
+    <Phrase key="lblPassword">Пароль</Phrase>
+    <Phrase key="lblDomain">Домен</Phrase>
+    <Phrase key="gbProxy">Веб-прокси</Phrase>
+    <Phrase key="lblProxyAddress">Адрес</Phrase>
+    <Phrase key="btnOK">OK</Phrase>
+    <Phrase key="btnCancel">Отмена</Phrase>
+  </Dictionary>
+  <Dictionary key="Scada.Comm.Drivers.DrvOpcClassic.View.Forms.FrmServerSelect">
+    <Phrase key="this">Выбор OPC-сервера</Phrase>
+    <Phrase key="lblHost">Хост</Phrase>
+    <Phrase key="lblServer">OPC-сервер</Phrase>
+    <Phrase key="gbDaSpec">Спецификация DA</Phrase>
+    <Phrase key="rbDaNone">Нет</Phrase>
+    <Phrase key="rbDa10">Data Access 1.0a</Phrase>
+    <Phrase key="rbDa20">Data Access 2.XX</Phrase>
+    <Phrase key="rbDa30">Data Access 3.00</Phrase>
+    <Phrase key="gbAeSpec">Спецификация AE</Phrase>
+    <Phrase key="rbAeNone">Нет</Phrase>
+    <Phrase key="rbAe10">Alarms and Events 1.XX</Phrase>
+    <Phrase key="btnOK">OK</Phrase>
+    <Phrase key="btnCancel">Отмена</Phrase>
+    <Phrase key="FillServersError">Ошибка при заполнении списка серверов.</Phrase>
+    <Phrase key="DisposeServersError">Ошибка при удалении серверов</Phrase>
+  </Dictionary>
+</DrvOpcClassicDictionaries>
